@@ -725,7 +725,8 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 							<div class="surface-soft rounded-2xl p-3 text-xs space-y-2">
 								<div class="flex justify-between gap-2"><span class="text-slate-500">انقضا</span><span class="font-bold" x-text="dateFa(user.expiry_unix, false)"></span></div>
 								<div class="flex justify-between gap-2"><span class="text-slate-500">باقی‌مانده</span><span class="font-black" :class="daysLeft(user) > 3 ? 'text-emerald-300' : 'text-amber-300'" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'"></span></div>
-								<div x-show="user.comment" class="pt-2 border-t border-slate-700/60">
+								<div class="flex justify-between gap-2"><span class="text-slate-500">آخرین اتصال</span><span class="font-bold" x-text="dateFa(user.last_seen, true)"></span></div>
+								<div x-show="user.comment" class="pt-2 border-t border-slate-700/60 mt-2">
 									<p class="text-slate-500 mb-1">یادداشت</p>
 									<p class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></p>
 								</div>
@@ -1037,13 +1038,11 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 									</div>
 									<div class="col-span-2 flex justify-center">
 										<template x-if="user.last_seen > 0">
-											<div class="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition hover:bg-indigo-500/20">
-												<svg class="w-4 h-4 text-indigo-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-												<div class="flex flex-col items-center justify-center">
-													<span class="text-[11px] font-black text-slate-100" x-text="splitDateFa(user.last_seen).date"></span>
-													<div class="w-full h-px bg-indigo-500/30 my-0.5"></div>
-													<span class="text-[10px] font-mono font-bold text-indigo-300 tracking-widest" x-text="splitDateFa(user.last_seen).time" dir="ltr"></span>
-												</div>
+											<div class="inline-flex items-center gap-3 px-3 py-1.5 rounded-xl border border-indigo-500/50 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.2)] transition hover:bg-indigo-500/20" dir="ltr">
+												<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+												<span class="text-[13px] font-black text-slate-100 tracking-wide" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
+												<span class="text-indigo-400/50 font-black">|</span>
+												<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-wider" x-text="splitDateFa(user.last_seen).time"></span>
 											</div>
 										</template>
 										<template x-if="!user.last_seen || user.last_seen <= 0">
@@ -1729,7 +1728,10 @@ func panelDataScript() string {
 				unix = Number(unix || 0);
 				if (unix <= 0) return "ندارد";
 				var d = new Date(unix * 1000);
-				return withTime ? d.toLocaleString("fa-IR") : d.toLocaleDateString("fa-IR");
+				var str = withTime ? d.toLocaleString("fa-IR") : d.toLocaleDateString("fa-IR");
+				var p = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+				for(var i=0; i<10; i++) str = str.split(p[i]).join(i);
+				return str;
 			},
 			splitDateFa: function(unix) {
 				unix = Number(unix || 0);
@@ -1737,10 +1739,14 @@ func panelDataScript() string {
 				var d = new Date(unix * 1000);
 				var optsDate = { year: 'numeric', month: 'numeric', day: 'numeric' };
 				var optsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-				return {
-					date: d.toLocaleDateString("fa-IR", optsDate),
-					time: d.toLocaleTimeString("fa-IR", optsTime)
-				};
+				var faDate = d.toLocaleDateString("fa-IR", optsDate);
+				var faTime = d.toLocaleTimeString("fa-IR", optsTime);
+				var p = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+				for(var i=0; i<10; i++) {
+					faDate = faDate.split(p[i]).join(i);
+					faTime = faTime.split(p[i]).join(i);
+				}
+				return { date: faDate, time: faTime };
 			},
 			randomUsername: function() { return "user_" + Math.floor(10000 + Math.random() * 90000); },
 			randomPassword: function() {

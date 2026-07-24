@@ -696,7 +696,7 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 			</div>
 			<div class="space-y-2">
 				<template x-for="(user, index) in paginatedUsers" :key="user.username">
-					<article x-data="{ expanded:false }" class="rounded-2xl overflow-hidden border border-white/10" :style="index % 2 === 0 ? 'background:rgba(255,255,255,0.035)' : 'background:rgba(255,255,255,0.085)'">
+					<article x-data="{ expanded:false }" class="rounded-2xl overflow-hidden border border-white/10" :style="index % 2 === 0 ? 'background:rgba(255,255,255,0)' : 'background:rgba(255,255,255,0.03)'">
 						<button @click="expanded=!expanded" class="w-full px-3 py-2.5 text-right">
 							<div class="flex items-center justify-between gap-2">
 								<div class="flex items-center gap-2.5 min-w-0">
@@ -725,7 +725,6 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 							<div class="surface-soft rounded-2xl p-3 text-xs space-y-2">
 								<div class="flex justify-between gap-2"><span class="text-slate-500">انقضا</span><span class="font-bold" x-text="dateFa(user.expiry_unix, false)"></span></div>
 								<div class="flex justify-between gap-2"><span class="text-slate-500">باقی‌مانده</span><span class="font-black" :class="daysLeft(user) > 3 ? 'text-emerald-300' : 'text-amber-300'" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'"></span></div>
-								<div class="flex justify-between gap-2"><span class="text-slate-500">آخرین اتصال</span><span class="font-bold" x-text="dateFa(user.last_seen, true)"></span></div>
 								<div x-show="user.comment" class="pt-2 border-t border-slate-700/60 mt-2">
 									<p class="text-slate-500 mb-1">یادداشت</p>
 									<p class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></p>
@@ -1020,14 +1019,14 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 				<div class="surface rounded-3xl overflow-hidden">
 					<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
 						<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300">نام کاربری <span x-text="sortIcon('username')"></span></button>
-						<button @click="sortBy('last_seen')" class="col-span-2 text-center hover:text-cyan-300">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
+						<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
 						<button @click="sortBy('status')" class="col-span-2 text-center hover:text-cyan-300">وضعیت <span x-text="sortIcon('status')"></span></button>
-						<button @click="sortBy('data_used')" class="col-span-3 text-left hover:text-cyan-300">مصرف <span x-text="sortIcon('data_used')"></span></button>
+						<button @click="sortBy('data_used')" class="col-span-2 text-left hover:text-cyan-300">مصرف <span x-text="sortIcon('data_used')"></span></button>
 						<button @click="sortBy('expiry')" class="col-span-2 text-left hover:text-cyan-300">انقضا <span x-text="sortIcon('expiry')"></span></button>
 					</div>
 					<div class="divide-y divide-white/10">
-						<template x-for="user in paginatedUsers" :key="user.username">
-							<article x-data="{ expanded:false }" class="hover:bg-white/[.03] transition">
+						<template x-for="(user, index) in paginatedUsers" :key="user.username">
+							<article x-data="{ expanded:false }" class="transition border-b border-white/5" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.02]'">
 								<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
 									<div class="col-span-3 flex items-center gap-3 min-w-0">
 										<span class="text-xl" x-text="isActive(user) ? (onlineMap[user.username] ? '🟢' : '⚪') : '🔴'"></span>
@@ -1036,23 +1035,23 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 											<p class="text-xs text-slate-500 mt-1 truncate" x-show="user.comment">💬 یادداشت دارد</p>
 										</div>
 									</div>
-									<div class="col-span-2 flex justify-center">
+									<div class="col-span-3 flex justify-center">
 										<template x-if="user.last_seen > 0">
-											<div class="inline-flex items-center gap-3 px-3 py-1.5 rounded-xl border border-indigo-500/50 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.2)] transition hover:bg-indigo-500/20" dir="ltr">
+											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition hover:bg-indigo-500/20 whitespace-nowrap shrink-0" dir="ltr">
 												<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-												<span class="text-[13px] font-black text-slate-100 tracking-wide" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
+												<span class="text-[13px] font-black text-slate-100 tracking-widest" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
 												<span class="text-indigo-400/50 font-black">|</span>
-												<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-wider" x-text="splitDateFa(user.last_seen).time"></span>
+												<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-widest" x-text="splitDateFa(user.last_seen).time"></span>
 											</div>
 										</template>
 										<template x-if="!user.last_seen || user.last_seen <= 0">
-											<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-3 py-1.5 rounded-lg">بدون اتصال</span>
+											<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
 										</template>
 									</div>
 									<div class="col-span-2 text-center">
 										<span class="rounded-xl px-3 py-1 text-xs font-black" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
 									</div>
-									<div class="col-span-3 text-left">
+									<div class="col-span-2 text-left">
 										<p class="font-mono font-black" x-text="formatBytes(user.data_used || 0)"></p>
 										<p class="font-mono text-xs text-slate-500" x-text="limitText(user)"></p>
 									</div>

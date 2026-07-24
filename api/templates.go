@@ -779,6 +779,12 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 							<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 py-2 text-xs font-black">📊 نمودار</button>
 							<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 py-2 text-xs font-black">✏️ ویرایش</button>
 						</div>
+						<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')" class="mt-2">
+							<input type="hidden" name="action" value="delete_node">
+							<input type="hidden" name="current_tab" value="nodes">
+							<input type="hidden" name="ip" :value="node.IP">
+							<button type="submit" class="w-full rounded-2xl bg-rose-500/10 text-rose-300 py-2 text-xs font-black">🗑️ حذف نود</button>
+						</form>
 					</div>
 				</article>
 			</template>
@@ -1114,6 +1120,13 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 									<div class="flex gap-3">
 										<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 px-5 py-2 text-sm font-black transition">📊 نمودار</button>
 										<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-5 py-2 text-sm font-black transition">✏️ ویرایش</button>
+										<div class="flex-1"></div>
+										<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')">
+											<input type="hidden" name="action" value="delete_node">
+											<input type="hidden" name="current_tab" value="nodes">
+											<input type="hidden" name="ip" :value="node.IP">
+											<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-5 py-2 text-sm font-black transition">🗑️ حذف</button>
+										</form>
 									</div>
 								</div>
 							</article>
@@ -1325,19 +1338,6 @@ func dashboardModalsHTML() string {
 					</div>
 					<button type="submit" class="w-full rounded-2xl bg-emerald-500 text-slate-950 py-3.5 font-black">ثبت تغییرات نود</button>
 				</form>
-			</div>
-		</div>
-	</div>
-	<div x-show="drilldownModal" x-cloak class="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" x-transition.opacity @click.self="drilldownModal=false; drilldownUrl=''">
-		<div class="w-full max-w-6xl h-[86vh] rounded-[2rem] bg-slate-900 border border-white/10 shadow-2xl p-4 flex flex-col">
-			<div class="flex items-center justify-between mb-4 shrink-0">
-				<h3 class="text-xl font-black text-cyan-300">📊 جزئیات نمودار</h3>
-				<button @click="drilldownModal=false; drilldownUrl=''" class="w-10 h-10 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-2xl leading-none">×</button>
-			</div>
-			<div class="flex-1 min-h-0 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
-				<template x-if="drilldownModal">
-					<iframe :src="drilldownUrl" class="w-full h-full border-0 block"></iframe>
-				</template>
 			</div>
 		</div>
 	</div>

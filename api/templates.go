@@ -498,6 +498,7 @@ type dashboardViewData struct {
 	TgBotToken      string
 	TgChatID        string
 	AutoBackupHours string
+	ZipPassword     string
 	RangeDropdown   string
 	FullscreenBtn   string
 	PanelScript     string
@@ -520,6 +521,7 @@ func makeDashboardViewData(currentTab, toastMsg string, toastIsError bool, chart
 		TgBotToken:      database.GetSetting("tg_bot_token"),
 		TgChatID:        database.GetSetting("tg_chat_id"),
 		AutoBackupHours: database.GetSetting("auto_backup_hours"),
+		ZipPassword:     database.GetSetting("zip_password"),
 		RangeDropdown:   chartRangeDropdownHTML(),
 		FullscreenBtn:   fullscreenBtnHTML(),
 		PanelScript:     panelDataScript(),
@@ -777,12 +779,6 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 							<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 py-2 text-xs font-black">📊 نمودار</button>
 							<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 py-2 text-xs font-black">✏️ ویرایش</button>
 						</div>
-						<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')" class="mt-2">
-							<input type="hidden" name="action" value="delete_node">
-							<input type="hidden" name="current_tab" value="nodes">
-							<input type="hidden" name="ip" :value="node.IP">
-							<button type="submit" class="w-full rounded-2xl bg-rose-500/10 text-rose-300 py-2 text-xs font-black">🗑️ حذف نود</button>
-						</form>
 					</div>
 				</article>
 			</template>
@@ -818,6 +814,7 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 				<input type="text" name="tg_bot_token" value="{{.TgBotToken}}" placeholder="توکن ربات" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<input type="text" name="tg_chat_id" value="{{.TgChatID}}" placeholder="Chat ID" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" placeholder="ساعت بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
+				<input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="رمز فایل زیپ بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات</button>
 			</form>
 		</section>
@@ -1114,16 +1111,9 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 										<div><span class="text-slate-500 ml-2">دامنه:</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
 										<div><span class="text-slate-500 ml-2">آی‌پی:</span><span class="font-mono" x-text="node.IP"></span></div>
 									</div>
-									<div class="flex items-center gap-3">
+									<div class="flex gap-3">
 										<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 px-5 py-2 text-sm font-black transition">📊 نمودار</button>
 										<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-5 py-2 text-sm font-black transition">✏️ ویرایش</button>
-										<div class="flex-1"></div>
-										<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')">
-											<input type="hidden" name="action" value="delete_node">
-											<input type="hidden" name="current_tab" value="nodes">
-											<input type="hidden" name="ip" :value="node.IP">
-											<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-5 py-2 text-sm font-black transition">🗑️ حذف</button>
-										</form>
 									</div>
 								</div>
 							</article>
@@ -1177,6 +1167,7 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 						<div><label class="block text-sm mb-2 text-slate-400">توکن ربات</label><input type="text" name="tg_bot_token" value="{{.TgBotToken}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
 						<div><label class="block text-sm mb-2 text-slate-400">Chat ID</label><input type="text" name="tg_chat_id" value="{{.TgChatID}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
 						<div><label class="block text-sm mb-2 text-slate-400">ساعت بکاپ</label><input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-sm mb-2 text-slate-400">رمز فایل زیپ بکاپ</label><input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="در صورت خالی بودن رمز نمیخورد" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
 					</div>
 					<button type="submit" class="mt-6 rounded-2xl bg-cyan-500 text-slate-950 font-black py-3 px-8">ذخیره تنظیمات کلی</button>
 				</form>

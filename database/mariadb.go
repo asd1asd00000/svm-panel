@@ -372,12 +372,34 @@ func cleanLogs() {
 // credentials via a temp defaults file -> no password on the command line)
 // ---------------------------------------------------------------------------
 
+// cleanOldBackups فایل‌های زیپ قدیمی‌تر از زمان مشخص شده را از پوشه بکاپ حذف می‌کند
+func cleanOldBackups(dir string, maxAge time.Duration) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	cutoff := time.Now().Add(-maxAge)
+	for _, f := range files {
+		if !f.IsDir() && strings.HasSuffix(f.Name(), ".zip") {
+			if info, err := f.Info(); err == nil && info.ModTime().Before(cutoff) {
+				_ = os.Remove(dir + "/" + f.Name())
+			}
+		}
+	}
+}
+
 func RunAdvancedBackup(zipPass string) error {
 	botToken := GetSetting("tg_bot_token")
 	chatID := GetSetting("tg_chat_id")
 	timestamp := time.Now().Format("20060102_150405")
+
+	// ۱. تعریف و ایجاد پوشه بکاپ (در صورت عدم وجود ساخته می‌شود)
+	backupDir := "/root/backups"
+	_ = os.MkdirAll(backupDir, 0755)
+
 	sqlFile := fmt.Sprintf("/tmp/svm_backup_%s.sql", timestamp)
-	zipFile := fmt.Sprintf("/root/svm_backup_%s.zip", timestamp)
+	// ذخیره فایل زیپ در پوشه مخصوص بکاپ
+	zipFile := fmt.Sprintf("%s/svm_backup_%s.zip", backupDir, timestamp)
 
 	user, pass := dbCredentials()
 	cnfPath, cleanupCnf, err := writeMySQLDefaultsFile(user, pass)
@@ -408,6 +430,9 @@ func RunAdvancedBackup(zipPass string) error {
 	if err := cmdZip.Run(); err != nil {
 		return err
 	}
+
+	// ۲. فراخوانی تابع پاکسازی برای حذف فایل‌های قدیمی‌تر از ۲۴ ساعت
+	cleanOldBackups(backupDir, 24*time.Hour)
 
 	if botToken == "" || chatID == "" {
 		return fmt.Errorf("telegram bot token or chat id is missing")

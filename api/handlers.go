@@ -455,7 +455,7 @@ func handleActions(w http.ResponseWriter, r *http.Request) {
 		} else {
 			successMsg = "node_deleted"
 		}
-	case "update_settings":
+case "update_settings":
 		var setErr error
 		for _, kv := range []struct{ k, v string }{
 			{"announcement_url", r.FormValue("announcement_url")},
@@ -463,6 +463,7 @@ func handleActions(w http.ResponseWriter, r *http.Request) {
 			{"auto_backup_hours", r.FormValue("auto_backup_hours")},
 			{"tg_bot_token", r.FormValue("tg_bot_token")},
 			{"tg_chat_id", r.FormValue("tg_chat_id")},
+			{"zip_password", r.FormValue("zip_password")}, // <--- این خط اضافه شود
 		} {
 			if err := database.SetSetting(kv.k, kv.v); err != nil {
 				setErr = err

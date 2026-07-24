@@ -131,11 +131,9 @@ EOF
         systemctl restart svm-api.service
         hash -r
 
-        clear
         echo -e "${Cyan}=========================================================${Reset}"
         echo -e "${Green} ✔️ MAIN Server successfully installed & SSL Configured!${Reset}"
         echo -e "${Cyan}=========================================================${Reset}"
-        echo -e " 🔗 Base Domain URL : ${Purple}$BASE_URL${Reset}"
         echo -e " 🌐 Web UI Login    : ${Purple}$BASE_URL/admin/login${Reset}"
         echo -e "---------------------------------------------------------"
         echo -e " 👤 Admin Username  : ${Yellow}$ADMIN_USER${Reset}"

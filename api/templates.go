@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"html/template"
 	"strings"
+
+	"github.com/asd1asd00000/svm-panel/database"
 )
 
 func renderTemplate(name, tpl string, data interface{}) string {
@@ -29,17 +31,9 @@ func renderTemplate(name, tpl string, data interface{}) string {
 }
 
 func templateErrorPage(err error) string {
-	return `<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-	<meta charset="UTF-8">
-	<title>Template Error</title>
-</head>
-<body style="font-family:tahoma;background:#0f172a;color:#fff;padding:24px">
-	<h2>خطا در رندر قالب</h2>
-	<pre>` + template.HTMLEscapeString(err.Error()) + `</pre>
-</body>
-</html>`
+	return `<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><title>Template Error</title></head><body style="font-family:tahoma;background:#0f172a;color:#fff;padding:24px"><h2>خطا در رندر قالب</h2><pre>` +
+		template.HTMLEscapeString(err.Error()) +
+		`</pre></body></html>`
 }
 
 func safeJSON(raw, fallback string) string {
@@ -163,25 +157,12 @@ func renderLoginHTML() string {
 	<style>
 		* { box-sizing: border-box; }
 		body { font-family: 'Vazirmatn', sans-serif; }
-		.mesh {
-			background:
-				radial-gradient(circle at 15% 20%, rgba(6, 182, 212, .25), transparent 34%),
-				radial-gradient(circle at 85% 10%, rgba(139, 92, 246, .18), transparent 30%),
-				radial-gradient(circle at 50% 90%, rgba(16, 185, 129, .16), transparent 35%),
-				#020617;
-		}
-		.grid-bg {
-			background-image:
-				linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px),
-				linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px);
-			background-size: 44px 44px;
-			mask-image: radial-gradient(circle, black 40%, transparent 78%);
-		}
+		.mesh { background: radial-gradient(circle at 15% 20%, rgba(6, 182, 212, .25), transparent 34%), radial-gradient(circle at 85% 10%, rgba(139, 92, 246, .18), transparent 30%), radial-gradient(circle at 50% 90%, rgba(16, 185, 129, .16), transparent 35%), #020617; }
+		.grid-bg { background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(circle, black 40%, transparent 78%); }
 	</style>
 </head>
 <body class="mesh min-h-screen text-slate-100 flex items-center justify-center p-4 overflow-hidden">
 	<div class="fixed inset-0 grid-bg pointer-events-none"></div>
-
 	<main class="relative w-full max-w-md mt-10">
 		<div class="absolute -inset-1 rounded-[2rem] bg-gradient-to-l from-cyan-500 via-indigo-500 to-emerald-500 opacity-40 blur-2xl"></div>
 		<section class="relative w-full rounded-[2rem] border border-white/10 bg-slate-900/80 backdrop-blur-2xl shadow-2xl p-6 sm:p-9 pt-16 sm:pt-20">
@@ -190,12 +171,10 @@ func renderLoginHTML() string {
 				<img src="/static/logo.png" alt="svm-panel" class="relative w-28 h-28 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_25px_rgba(34,211,238,0.5)]" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
 				<div class="relative w-28 h-28 sm:w-32 sm:h-32 items-center justify-center" style="display:none"><span class="text-6xl">⚡</span></div>
 			</div>
-
 			<div class="text-center mb-7">
 				<h1 class="text-3xl font-black tracking-tight bg-gradient-to-l from-cyan-300 to-emerald-300 bg-clip-text text-transparent">SVM PANEL</h1>
 				<p class="text-sm text-slate-400 mt-2">پنل مدیریت کاربران ssh vpn</p>
 			</div>
-
 			<form action="/admin/login" method="POST" class="w-full space-y-4">
 				<div class="w-full">
 					<label class="block text-xs font-bold mb-2 text-slate-300">نام کاربری ادمین</label>
@@ -473,7 +452,7 @@ func renderSubHTML(username, barColor string, percent float64, statusBadge, onli
 	<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>
-`
+`, data)
 }
 
 type dashboardViewData struct {
@@ -498,11 +477,7 @@ type dashboardViewData struct {
 	ModalHTML       string
 }
 
-func makeDashboardViewData(
-	currentTab, toastMsg string,
-	toastIsError bool,
-	chartJSON, backupColor, backupText, logContent, token, adminUser string,
-) dashboardViewData {
+func makeDashboardViewData(currentTab, toastMsg string, toastIsError bool, chartJSON, backupColor, backupText, logContent, token, adminUser string) dashboardViewData {
 	return dashboardViewData{
 		CurrentTab:      normalizeTab(currentTab),
 		ToastMsg:        toastMsg,
@@ -534,11 +509,7 @@ const fullscreenCSS = `
 	#fullWrap:fullscreen, #fullWrap:-webkit-full-screen { background:#020617; }
 `
 
-func renderMobileDashboard(
-	currentTab, toastMsg string,
-	toastIsError bool,
-	chartJSON, backupColor, backupText, logContent, token, adminUser string,
-) string {
+func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chartJSON, backupColor, backupText, logContent, token, adminUser string) string {
 	data := makeDashboardViewData(currentTab, toastMsg, toastIsError, chartJSON, backupColor, backupText, logContent, token, adminUser)
 	return renderTemplate("mobile-dashboard", `
 <!DOCTYPE html>
@@ -631,7 +602,7 @@ func renderMobileDashboard(
 				<div class="fs-head flex items-center justify-between mb-3 gap-2 relative z-30">
 					<div class="min-w-0">
 						<h3 class="font-black text-slate-100">📊 مصرف ترافیک</h3>
-						<p class="text-[11px] text-slate-500 mt-0.5">مجموع ترافیک همهٔ سرورها در بازهٔ انتخابی</p>
+						<p class="text-[11px] text-slate-500 mt-0.5">مجموع ترافیک همهٔ سرورها</p>
 					</div>
 					<div class="flex items-center gap-2 shrink-0">
 						{{safeHTML .RangeDropdown}}
@@ -640,10 +611,8 @@ func renderMobileDashboard(
 				</div>
 				<div class="fs-chart h-[260px] relative z-0"><div id="dashboardChart" class="w-full h-full"></div></div>
 				<div class="fs-foot mt-3 pt-3 border-t border-white/5">
-					<p class="text-xs font-black" :class="chartTrendUp === null ? 'text-slate-400' : (chartTrendUp ? 'text-emerald-400' : 'text-rose-400')">
-						<span x-text="chartTrendText"></span>
-					</p>
-					<p class="text-[11px] text-slate-400 mt-1">مصرف در این بازه: <span class="text-slate-100 font-black" x-text="chartTotal + ' GB'"></span></p>
+					<p class="text-xs font-black" :class="chartTrendUp === null ? 'text-slate-400' : (chartTrendUp ? 'text-emerald-400' : 'text-rose-400')"><span x-text="chartTrendText"></span></p>
+					<p class="text-[11px] text-slate-400 mt-1">مصرف بازه: <span class="text-slate-100 font-black" x-text="chartTotal + ' GB'"></span></p>
 				</div>
 			</div>
 			<div class="surface rounded-3xl p-4">
@@ -660,13 +629,6 @@ func renderMobileDashboard(
 					</template>
 				</div>
 			</div>
-			<div class="surface rounded-3xl p-4 flex items-center justify-between">
-				<div>
-					<p class="font-black text-slate-100">اتوبکاپ تلگرام</p>
-					<p class="text-xs text-slate-500 mt-1">وضعیت بکاپ‌گیری خودکار</p>
-				</div>
-				<span class="rounded-full border px-3 py-1 text-xs font-black {{.BackupColor}}">{{.BackupText}}</span>
-			</div>
 		</section>
 		<section x-show="activeTab === 'users'" x-transition class="space-y-3">
 			<div class="surface rounded-2xl p-2 grid grid-cols-3 gap-2">
@@ -677,26 +639,23 @@ func renderMobileDashboard(
 			<div class="flex items-center gap-2">
 				<button @click="prepareCreateUser()" class="flex-1 rounded-2xl bg-gradient-to-l from-cyan-500 to-emerald-500 text-slate-950 font-black py-2.5 shadow-lg shadow-cyan-500/15 active:scale-[.99]">+ کاربر جدید</button>
 				<select x-model.number="itemsPerPage" @change="onPerPageChange()" class="shrink-0 bg-slate-950/80 border border-slate-700 rounded-2xl px-2 py-2.5 text-xs font-black text-slate-200 outline-none focus:border-cyan-400">
-					<option value="10">10</option>
-					<option value="20">20</option>
-					<option value="50">50</option>
-					<option value="100">100</option>
+					<option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option>
 				</select>
 			</div>
 			
 			<div class="surface rounded-3xl overflow-hidden flex flex-col">
 				<div class="w-full overflow-x-auto no-scrollbar">
-					<div class="min-w-[950px]">
+					<div class="min-w-[1250px]">
 						<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
 							<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
-							<button @click="sortBy('last_seen')" class="col-span-3 text-right pr-4 hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
-							<button @click="sortBy('status')" class="col-span-2 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
-							<button @click="sortBy('data_used')" class="col-span-2 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
-							<button @click="sortBy('expiry')" class="col-span-2 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
+							<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
+							<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
+							<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
+							<button @click="sortBy('expiry')" class="col-span-2 text-center hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
 						</div>
 						<div class="divide-y divide-white/5">
 							<template x-for="(user, index) in paginatedUsers" :key="user.username">
-								<article x-data="{ expanded:false }" class="transition hover:bg-white/[.06]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
+								<article x-data="{ expanded:false }" class="transition hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
 									<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
 										
 										<div class="col-span-3 flex items-center gap-3 min-w-0">
@@ -707,7 +666,7 @@ func renderMobileDashboard(
 											</div>
 										</div>
 										
-										<div class="col-span-3 flex justify-start pr-4">
+										<div class="col-span-3 flex justify-center">
 											<template x-if="user.last_seen > 0">
 												<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 													<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -721,11 +680,11 @@ func renderMobileDashboard(
 											</template>
 										</div>
 										
-										<div class="col-span-2 flex justify-center">
+										<div class="col-span-1 flex justify-center">
 											<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
 										</div>
 										
-										<div class="col-span-2 flex justify-center">
+										<div class="col-span-3 flex justify-center">
 											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 												<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
 												<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
@@ -734,7 +693,7 @@ func renderMobileDashboard(
 											</div>
 										</div>
 										
-										<div class="col-span-2 flex justify-end">
+										<div class="col-span-2 flex justify-center">
 											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 												<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
 												<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
@@ -757,7 +716,7 @@ func renderMobileDashboard(
 										<div class="flex items-center gap-3">
 											<button @click="prepareEditUser(user)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-4 py-2 text-sm font-black transition">✏️ ویرایش</button>
 											<a :href="'/sub/' + user.sub_token" target="_blank" class="rounded-2xl bg-blue-500/10 text-blue-300 hover:bg-blue-500 hover:text-white px-4 py-2 text-sm font-black transition">👁️ مشاهده</a>
-											<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500 hover:text-slate-950 px-4 py-2 text-sm font-black transition">🔗 کپی لینک</button>
+											<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500 hover:text-slate-950 px-4 py-2 text-sm font-black transition">🔗 لینک</button>
 											<div class="flex-1"></div>
 											<form action="/admin/actions" method="POST" onsubmit="return confirm('ریست ترافیک؟')">
 												<input type="hidden" name="action" value="reset_traffic">
@@ -788,29 +747,29 @@ func renderMobileDashboard(
 		<section x-show="activeTab === 'nodes'" x-transition class="space-y-3">
 			<div class="surface rounded-3xl overflow-hidden flex flex-col">
 				<div class="w-full overflow-x-auto no-scrollbar">
-					<div class="min-w-[800px]">
+					<div class="min-w-[1250px]">
 						<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-							<div class="col-span-4 text-right">سرور نود</div>
-							<div class="col-span-3 text-right pr-4">وضعیت</div>
-							<div class="col-span-3 text-center">ترافیک کل</div>
+							<div class="col-span-5">سرور نود</div>
+							<div class="col-span-2 text-center">وضعیت</div>
+							<div class="col-span-3 text-left">ترافیک کل</div>
 							<div class="col-span-2 text-left">آخرین پینگ</div>
 						</div>
 						<div class="divide-y divide-white/5">
 							<template x-for="(node, index) in nodes" :key="node.IP">
 								<article x-data="{ expanded:false }" class="transition hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
 									<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
-										<div class="col-span-4 flex items-center gap-3 min-w-0">
+										<div class="col-span-5 flex items-center gap-3 min-w-0">
 											<span class="text-2xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
 											<div class="min-w-0">
 												<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
 												<p class="font-mono text-xs text-slate-500 truncate" x-text="node.IP"></p>
 											</div>
 										</div>
-										<div class="col-span-3 flex justify-start pr-4">
+										<div class="col-span-2 text-center">
 											<span class="rounded-xl px-3 py-1 text-xs font-black" :class="node.IsOnline ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="node.IsOnline ? 'آنلاین' : 'آفلاین'"></span>
 										</div>
-										<div class="col-span-3 flex justify-center items-center font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
-										<div class="col-span-2 flex justify-end text-xs text-slate-400" x-text="dateFaEn(node.LastSeen)"></div>
+										<div class="col-span-3 text-left font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
+										<div class="col-span-2 text-left text-xs text-slate-400" x-text="dateFaEn(node.LastSeen)"></div>
 									</button>
 									<div x-show="expanded" x-collapse class="px-6 pb-6 border-t border-white/5 pt-4">
 										<div class="surface-soft rounded-2xl p-4 grid grid-cols-2 gap-4 text-sm mb-4">
@@ -868,23 +827,24 @@ func renderMobileDashboard(
 				<input type="text" name="tg_chat_id" value="{{.TgChatID}}" placeholder="Chat ID" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" placeholder="ساعت بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="رمز فایل زیپ بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات کلی</button>
+				<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات</button>
 			</form>
 		</section>
 	</main>
-</div>
-{{safeHTML .ModalHTML}}
-{{safeHTML .PanelScript}}
+	<nav class="fixed bottom-0 left-0 right-0 z-50 h-[76px] pb-safe bg-slate-950/85 backdrop-blur-2xl border-t border-white/10 grid grid-cols-4">
+		<button @click="activeTab='dashboard'; window.scrollTo(0,0)" class="flex flex-col items-center justify-center gap-1 transition" :class="activeTab==='dashboard' ? 'text-cyan-300 scale-105' : 'text-slate-500'"><span class="text-xl">📊</span><span class="text-[10px] font-black">داشبورد</span></button>
+		<button @click="activeTab='users'; window.scrollTo(0,0)" class="flex flex-col items-center justify-center gap-1 transition" :class="activeTab==='users' ? 'text-cyan-300 scale-105' : 'text-slate-500'"><span class="text-xl">👥</span><span class="text-[10px] font-black">کاربران</span></button>
+		<button @click="activeTab='nodes'; window.scrollTo(0,0)" class="flex flex-col items-center justify-center gap-1 transition" :class="activeTab==='nodes' ? 'text-cyan-300 scale-105' : 'text-slate-500'"><span class="text-xl">🖥️</span><span class="text-[10px] font-black">نودها</span></button>
+		<button @click="activeTab='settings'; window.scrollTo(0,0)" class="flex flex-col items-center justify-center gap-1 transition" :class="activeTab==='settings' ? 'text-cyan-300 scale-105' : 'text-slate-500'"><span class="text-xl">⚙️</span><span class="text-[10px] font-black">تنظیمات</span></button>
+	</nav>
+	{{safeHTML .ModalHTML}}
+	{{safeHTML .PanelScript}}
 </body>
 </html>
-`
+`, data)
 }
 
-func renderDesktopDashboard(
-	currentTab, toastMsg string,
-	toastIsError bool,
-	chartJSON, backupColor, backupText, logContent, token, adminUser string,
-) string {
+func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, chartJSON, backupColor, backupText, logContent, token, adminUser string) string {
 	data := makeDashboardViewData(currentTab, toastMsg, toastIsError, chartJSON, backupColor, backupText, logContent, token, adminUser)
 	return renderTemplate("desktop-dashboard", `
 <!DOCTYPE html>
@@ -1056,20 +1016,19 @@ func renderDesktopDashboard(
 						<button @click="prepareCreateUser()" class="rounded-2xl bg-gradient-to-l from-cyan-500 to-emerald-500 text-slate-950 px-6 py-2.5 font-black shadow-lg shadow-cyan-500/15">+ کاربر جدید</button>
 					</div>
 				</div>
-				
 				<div class="surface rounded-3xl overflow-hidden flex flex-col">
 					<div class="w-full overflow-x-auto no-scrollbar">
-						<div class="min-w-[950px]">
+						<div class="min-w-[1250px]">
 							<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
 								<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
-								<button @click="sortBy('last_seen')" class="col-span-3 text-right pr-4 hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
-								<button @click="sortBy('status')" class="col-span-2 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
-								<button @click="sortBy('data_used')" class="col-span-2 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
-								<button @click="sortBy('expiry')" class="col-span-2 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
+								<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
+								<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
+								<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
+								<button @click="sortBy('expiry')" class="col-span-2 text-center hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
 							</div>
 							<div class="divide-y divide-white/5">
 								<template x-for="(user, index) in paginatedUsers" :key="user.username">
-									<article x-data="{ expanded:false }" class="transition hover:bg-white/[.06]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
+									<article x-data="{ expanded:false }" class="transition hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
 										<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
 											
 											<div class="col-span-3 flex items-center gap-3 min-w-0">
@@ -1080,7 +1039,7 @@ func renderDesktopDashboard(
 												</div>
 											</div>
 											
-											<div class="col-span-3 flex justify-start pr-4">
+											<div class="col-span-3 flex justify-center">
 												<template x-if="user.last_seen > 0">
 													<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 														<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -1094,11 +1053,11 @@ func renderDesktopDashboard(
 												</template>
 											</div>
 											
-											<div class="col-span-2 flex justify-center">
+											<div class="col-span-1 flex justify-center">
 												<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
 											</div>
 											
-											<div class="col-span-2 flex justify-center">
+											<div class="col-span-3 flex justify-center">
 												<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 													<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
 													<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
@@ -1107,12 +1066,12 @@ func renderDesktopDashboard(
 												</div>
 											</div>
 											
-											<div class="col-span-2 flex justify-end">
+											<div class="col-span-2 flex justify-center">
 												<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 													<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
 													<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
 													<span class="text-rose-400/50 font-black">|</span>
-													<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFaEn(user.expiry_unix).split('/').join(' / ')"></span>
+													<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFaEn(user.expiry_unix)"></span>
 												</div>
 											</div>
 											
@@ -1158,32 +1117,32 @@ func renderDesktopDashboard(
 					</div>
 				</div>
 			</section>
-			<section x-show="activeTab === 'nodes'" x-transition class="space-y-3">
+			<section x-show="activeTab === 'nodes'" x-transition class="space-y-5">
 				<div class="surface rounded-3xl overflow-hidden flex flex-col">
 					<div class="w-full overflow-x-auto no-scrollbar">
-						<div class="w-full min-w-[800px]">
+						<div class="min-w-[1250px]">
 							<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-								<div class="col-span-4 text-right">سرور نود</div>
-								<div class="col-span-3 text-right pr-4">وضعیت</div>
-								<div class="col-span-3 text-center">ترافیک کل</div>
+								<div class="col-span-5">سرور نود</div>
+								<div class="col-span-2 text-center">وضعیت</div>
+								<div class="col-span-3 text-left">ترافیک کل</div>
 								<div class="col-span-2 text-left">آخرین پینگ</div>
 							</div>
 							<div class="divide-y divide-white/5">
 								<template x-for="(node, index) in nodes" :key="node.IP">
 									<article x-data="{ expanded:false }" class="transition hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
 										<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
-											<div class="col-span-4 flex items-center gap-3 min-w-0">
+											<div class="col-span-5 flex items-center gap-3 min-w-0">
 												<span class="text-2xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
 												<div class="min-w-0">
 													<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
 													<p class="font-mono text-xs text-slate-500 truncate" x-text="node.IP"></p>
 												</div>
 											</div>
-											<div class="col-span-3 flex justify-start pr-4">
+											<div class="col-span-2 text-center">
 												<span class="rounded-xl px-3 py-1 text-xs font-black" :class="node.IsOnline ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="node.IsOnline ? 'آنلاین' : 'آفلاین'"></span>
 											</div>
-											<div class="col-span-3 flex justify-center items-center font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
-											<div class="col-span-2 flex justify-end text-xs text-slate-400" x-text="dateFaEn(node.LastSeen)"></div>
+											<div class="col-span-3 text-left font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
+											<div class="col-span-2 text-left text-xs text-slate-400" x-text="dateFaEn(node.LastSeen)"></div>
 										</button>
 										<div x-show="expanded" x-collapse class="px-6 pb-6 border-t border-white/5 pt-4">
 											<div class="surface-soft rounded-2xl p-4 grid grid-cols-2 gap-4 text-sm mb-4">
@@ -1209,39 +1168,55 @@ func renderDesktopDashboard(
 					</div>
 				</div>
 			</section>
-			<section x-show="activeTab === 'settings'" x-transition class="space-y-4">
-				<div class="surface rounded-3xl p-4">
-					<h3 class="font-black text-cyan-300 mb-3">توکن کلاستر</h3>
-					<input type="text" readonly value="{{.Token}}" dir="ltr" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-xs font-mono text-left outline-none mb-3">
-					<button type="button" data-token="{{.Token}}" onclick="copyText(this.dataset.token)" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">کپی توکن</button>
+			<section x-show="activeTab === 'settings'" x-transition class="space-y-6">
+				<div class="grid grid-cols-2 gap-6">
+					<div class="surface rounded-3xl p-6">
+						<h3 class="text-xl font-black text-cyan-300 mb-4">توکن کلاستر</h3>
+						<div class="flex gap-3">
+							<input type="text" readonly value="{{.Token}}" dir="ltr" class="flex-1 bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 font-mono text-left outline-none">
+							<button type="button" data-token="{{.Token}}" onclick="copyText(this.dataset.token)" class="rounded-2xl bg-cyan-500 text-slate-950 px-6 font-black">کپی</button>
+						</div>
+					</div>
+					<div class="surface rounded-3xl p-6">
+						<h3 class="text-xl font-black text-emerald-300 mb-4">بکاپ لوکال</h3>
+						<div class="flex items-center gap-4">
+							<a href="/admin/backup/download" class="flex-1 text-center rounded-2xl bg-emerald-500 text-slate-950 font-black py-3">دانلود</a>
+							<form action="/admin/backup/restore" method="POST" enctype="multipart/form-data" class="flex-1 flex items-center gap-3">
+								<input type="file" name="backup_file" accept=".sql" required class="text-xs text-slate-300 w-full">
+								<button type="submit" class="rounded-2xl bg-orange-500 text-slate-950 font-black px-5 py-3">اجرا</button>
+							</form>
+						</div>
+					</div>
 				</div>
-				<form action="/admin/actions" method="POST" class="surface rounded-3xl p-4 space-y-3">
+				<form action="/admin/actions" method="POST" class="surface rounded-3xl p-6">
 					<input type="hidden" name="action" value="change_credentials">
 					<input type="hidden" name="current_tab" value="settings">
-					<h3 class="font-black text-amber-300">تغییر ورود پنل</h3>
-					<input type="text" name="admin_username" value="{{.AdminUser}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-					<input type="password" name="admin_password" placeholder="رمز جدید..." class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-					<button type="submit" class="w-full rounded-2xl bg-amber-500 text-slate-950 py-3 font-black">ذخیره</button>
+					<h3 class="text-xl font-black text-amber-300 mb-4">تغییر رمز ورود</h3>
+					<div class="grid grid-cols-3 gap-4 items-end">
+						<div>
+							<label class="block text-sm mb-2 text-slate-400">نام کاربری</label>
+							<input type="text" name="admin_username" value="{{.AdminUser}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none">
+						</div>
+						<div>
+							<label class="block text-sm mb-2 text-slate-400">رمز جدید</label>
+							<input type="password" name="admin_password" placeholder="در صورت نیاز..." class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none">
+						</div>
+						<button type="submit" class="rounded-2xl bg-amber-500 text-slate-950 font-black py-3">ذخیره رمز</button>
+					</div>
 				</form>
-				<div class="surface rounded-3xl p-4 space-y-3">
-					<h3 class="font-black text-emerald-300">بکاپ دیتابیس</h3>
-					<a href="/admin/backup/download" class="block text-center rounded-2xl bg-emerald-500 text-slate-950 font-black py-3">دانلود بکاپ</a>
-					<form action="/admin/backup/restore" method="POST" enctype="multipart/form-data" class="space-y-3 pt-3 border-t border-white/10">
-						<input type="file" name="backup_file" accept=".sql" required class="text-xs text-slate-300 w-full">
-						<button type="submit" class="w-full rounded-2xl bg-orange-500 text-slate-950 font-black py-3">بازگردانی</button>
-					</form>
-				</div>
-				<form action="/admin/actions" method="POST" class="surface rounded-3xl p-4 space-y-3">
+				<form action="/admin/actions" method="POST" class="surface rounded-3xl p-6">
 					<input type="hidden" name="action" value="update_settings">
 					<input type="hidden" name="current_tab" value="settings">
-					<h3 class="font-black text-cyan-300">لینک‌ها و تلگرام</h3>
-					<input type="text" name="announcement_url" value="{{.AnnouncementURL}}" placeholder="لینک اطلاعیه" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-					<input type="text" name="tutorial_url" value="{{.TutorialURL}}" placeholder="لینک آموزش" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-					<input type="text" name="tg_bot_token" value="{{.TgBotToken}}" placeholder="توکن ربات" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-					<input type="text" name="tg_chat_id" value="{{.TgChatID}}" placeholder="Chat ID" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-					<input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" placeholder="ساعت بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-					<input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="رمز فایل زیپ بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-					<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات کلی</button>
+					<h3 class="text-xl font-black text-cyan-300 mb-4">لینک‌ها و تلگرام</h3>
+					<div class="grid grid-cols-2 gap-4">
+						<div><label class="block text-sm mb-2 text-slate-400">لینک اطلاعیه</label><input type="text" name="announcement_url" value="{{.AnnouncementURL}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-sm mb-2 text-slate-400">لینک آموزش</label><input type="text" name="tutorial_url" value="{{.TutorialURL}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-sm mb-2 text-slate-400">توکن ربات</label><input type="text" name="tg_bot_token" value="{{.TgBotToken}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-sm mb-2 text-slate-400">Chat ID</label><input type="text" name="tg_chat_id" value="{{.TgChatID}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-sm mb-2 text-slate-400">ساعت بکاپ</label><input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-sm mb-2 text-slate-400">رمز فایل زیپ بکاپ</label><input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="در صورت خالی بودن رمز نمیخورد" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+					</div>
+					<button type="submit" class="mt-6 rounded-2xl bg-cyan-500 text-slate-950 font-black py-3 px-8">ذخیره تنظیمات کلی</button>
 				</form>
 			</section>
 		</main>
@@ -1250,7 +1225,66 @@ func renderDesktopDashboard(
 	{{safeHTML .PanelScript}}
 </body>
 </html>
-`
+`, data)
+}
+
+func renderFullChartHTML(chartJSON string) string {
+	data := struct {
+		ChartRaw      string
+		RangeDropdown string
+		CoreScript    string
+	}{
+		ChartRaw:      safeJSON(chartJSON, `{"hourly":{"categories":[],"series":[]},"daily":{"categories":[],"series":[]}}`),
+		RangeDropdown: chartRangeDropdownHTML(),
+		CoreScript:    chartCoreScript(),
+	}
+	return renderTemplate("full-chart", `
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+	<title>نمودار ترافیک کلاستر</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;800;900&display=swap" rel="stylesheet">
+	<style>
+		html,body{height:100%;}
+		body{font-family:'Vazirmatn',sans-serif;background:#020617;margin:0;overflow:hidden;}
+		[x-cloak]{display:none !important;}
+		.mesh{background:radial-gradient(circle at 20% 0%,rgba(34,211,238,.16),transparent 40%),radial-gradient(circle at 80% 100%,rgba(52,211,153,.12),transparent 45%),#020617;}
+		.apexcharts-tooltip{background:#0f172a !important;border:1px solid #334155 !important;color:#f8fafc !important;}
+		#fullWrap:fullscreen, #fullWrap:-webkit-full-screen { background:#020617; padding:12px; }
+	</style>
+	{{safeHTML .CoreScript}}
+	<script>window.CHART_RAW = {{safeJS .ChartRaw}};</script>
+</head>
+<body class="mesh text-slate-100" x-data="svmMakeChartComponent(window.CHART_RAW, 'fullChart')" x-init="mount()">
+	<div id="fullWrap" class="h-[100dvh] flex flex-col p-3 sm:p-4">
+		<div class="shrink-0 flex items-center justify-between gap-3 mb-3 relative z-30">
+			<div class="min-w-0">
+				<h1 class="text-base sm:text-lg font-black bg-gradient-to-l from-cyan-300 to-emerald-300 bg-clip-text text-transparent truncate">📊 نمودار مصرف ترافیک کلاستر</h1>
+				<p class="text-[11px] text-slate-500 truncate">مجموع ترافیک همهٔ سرورها در بازهٔ انتخابی</p>
+			</div>
+			<div class="flex items-center gap-2 shrink-0">
+				{{safeHTML .RangeDropdown}}
+				<button type="button" onclick="svmGoLandscape(document.getElementById('fullWrap'))" aria-label="افقی / تمام صفحه" class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 active:scale-95">
+					<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+				</button>
+			</div>
+		</div>
+		<div class="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-950/40 p-2 relative z-0">
+			<div id="fullChart" class="w-full h-full"></div>
+		</div>
+		<div class="shrink-0 mt-3 flex flex-wrap items-center justify-between gap-2">
+			<p class="text-xs sm:text-sm font-black" :class="chartTrendUp === null ? 'text-slate-400' : (chartTrendUp ? 'text-emerald-400' : 'text-rose-400')"><span x-text="chartTrendText"></span></p>
+			<p class="text-[11px] sm:text-xs text-slate-400">مصرف در این بازه: <span class="text-slate-100 font-black" x-text="chartTotal + ' GB'"></span></p>
+		</div>
+	</div>
+	<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>
+`, data)
 }
 
 func dashboardModalsHTML() string {
@@ -1645,23 +1679,21 @@ func panelDataScript() string {
 				unix = Number(unix || 0);
 				if (unix <= 0) return "ندارد";
 				var d = new Date(unix * 1000);
-				var str = d.toLocaleDateString("fa-IR", { year: 'numeric', month: '2-digit', day: '2-digit' });
+				var str = d.toLocaleDateString("fa-IR", { year: 'numeric', month: 'numeric', day: 'numeric' });
 				var p = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-				for(var i=0; i<10; i++) {
-					str = str.split(p[i]).join(i.toString());
-				}
+				for(var i=0; i<10; i++) str = str.split(p[i]).join(i);
 				return str.split('/').join(' / ');
 			},
 			splitDateFa: function(unix) {
 				unix = Number(unix || 0);
 				if (unix <= 0) return { date: "بدون اتصال", time: "" };
 				var d = new Date(unix * 1000);
-				var faDate = d.toLocaleDateString("fa-IR", { year: 'numeric', month: '2-digit', day: '2-digit' });
-				var faTime = d.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+				var faDate = d.toLocaleDateString("fa-IR", { year: 'numeric', month: 'numeric', day: 'numeric' });
+				var faTime = d.toLocaleTimeString("fa-IR", { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 				var p = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
 				for(var i=0; i<10; i++) {
-					faDate = faDate.split(p[i]).join(i.toString());
-					faTime = faTime.split(p[i]).join(i.toString());
+					faDate = faDate.split(p[i]).join(i);
+					faTime = faTime.split(p[i]).join(i);
 				}
 				return { date: faDate.split('/').join(' / '), time: faTime };
 			},

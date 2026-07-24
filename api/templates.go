@@ -1038,39 +1038,43 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 										</div>
 									</div>
 									
+									<!-- آخرین اتصال -->
 									<div class="col-span-3 flex justify-center">
 										<template x-if="user.last_seen > 0">
-											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-												<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-												<span class="text-[13px] font-black text-slate-100 tracking-widest" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
-												<span class="text-indigo-400/50 font-black">|</span>
-												<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-widest" x-text="splitDateFa(user.last_seen).time"></span>
+											<div class="inline-flex items-center justify-center gap-2 px-2.5 py-1.5 rounded-[10px] border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+												<svg class="w-3.5 h-3.5 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+												<span class="text-xs font-black text-slate-100" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
+												<span class="text-indigo-400/50 font-black text-xs mx-0.5">|</span>
+												<span class="text-xs font-mono font-bold text-indigo-200" x-text="splitDateFa(user.last_seen).time"></span>
 											</div>
 										</template>
 										<template x-if="!user.last_seen || user.last_seen <= 0">
-											<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
+											<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-3 py-1.5 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
 										</template>
 									</div>
 									
+									<!-- وضعیت -->
 									<div class="col-span-1 flex justify-center">
 										<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
 									</div>
 									
+									<!-- مصرف -->
 									<div class="col-span-3 flex justify-center">
-										<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-											<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-											<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
-											<span class="text-cyan-400/50 font-black">|</span>
-											<span class="text-[13px] font-mono font-bold text-cyan-200 tracking-widest" x-text="limitText(user)"></span>
+										<div class="inline-flex items-center justify-center gap-2 px-2.5 py-1.5 rounded-[10px] border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+											<svg class="w-3.5 h-3.5 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+											<span class="text-xs font-mono font-black text-slate-100" x-text="formatBytes(user.data_used || 0)"></span>
+											<span class="text-cyan-400/50 font-black text-xs mx-0.5">|</span>
+											<span class="text-xs font-mono font-bold text-cyan-200" x-text="limitText(user)"></span>
 										</div>
 									</div>
 									
+									<!-- انقضا -->
 									<div class="col-span-2 flex justify-end">
-										<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-											<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-											<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
-											<span class="text-rose-400/50 font-black">|</span>
-											<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFa(user.expiry_unix, false).split('/').join(' / ')"></span>
+										<div class="inline-flex items-center justify-center gap-2 px-2.5 py-1.5 rounded-[10px] border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+											<svg class="w-3.5 h-3.5 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+											<span class="text-xs font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
+											<span class="text-rose-400/50 font-black text-xs mx-0.5">|</span>
+											<span class="text-xs font-mono font-bold text-rose-200" x-text="dateFa(user.expiry_unix, false).split('/').join(' / ')"></span>
 										</div>
 									</div>
 									

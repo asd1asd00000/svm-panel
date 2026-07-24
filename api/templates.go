@@ -777,6 +777,12 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 							<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 py-2 text-xs font-black">📊 نمودار</button>
 							<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 py-2 text-xs font-black">✏️ ویرایش</button>
 						</div>
+						<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')" class="mt-2">
+							<input type="hidden" name="action" value="delete_node">
+							<input type="hidden" name="current_tab" value="nodes">
+							<input type="hidden" name="ip" :value="node.IP">
+							<button type="submit" class="w-full rounded-2xl bg-rose-500/10 text-rose-300 py-2 text-xs font-black">🗑️ حذف نود</button>
+						</form>
 					</div>
 				</article>
 			</template>
@@ -1108,9 +1114,16 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 										<div><span class="text-slate-500 ml-2">دامنه:</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
 										<div><span class="text-slate-500 ml-2">آی‌پی:</span><span class="font-mono" x-text="node.IP"></span></div>
 									</div>
-									<div class="flex gap-3">
+									<div class="flex items-center gap-3">
 										<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 px-5 py-2 text-sm font-black transition">📊 نمودار</button>
 										<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-5 py-2 text-sm font-black transition">✏️ ویرایش</button>
+										<div class="flex-1"></div>
+										<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')">
+											<input type="hidden" name="action" value="delete_node">
+											<input type="hidden" name="current_tab" value="nodes">
+											<input type="hidden" name="ip" :value="node.IP">
+											<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-5 py-2 text-sm font-black transition">🗑️ حذف</button>
+										</form>
 									</div>
 								</div>
 							</article>

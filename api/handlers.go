@@ -449,6 +449,12 @@ func handleActions(w http.ResponseWriter, r *http.Request) {
 		} else {
 			successMsg = "node_edited"
 		}
+	case "delete_node":
+		if err := database.DeleteNode(r.FormValue("ip")); err != nil {
+			failMsg = "node_delete_failed"
+		} else {
+			successMsg = "node_deleted"
+		}
 	case "update_settings":
 		var setErr error
 		for _, kv := range []struct{ k, v string }{
@@ -552,6 +558,8 @@ func handleDashboard(w http.ResponseWriter, r *http.Request) {
 		toastMsg = "\U0001F5D1\uFE0F \u06a9\u0627\u0631\u0628\u0631 \u062d\u0630\u0641 \u0634\u062f!"
 	case "node_edited":
 		toastMsg = "\u2705 \u0646\u0648\u062f \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0634\u062f!"
+	case "node_deleted":
+		toastMsg = "🗑️ نود حذف شد!"
 	case "settings_saved":
 		toastMsg = "\U0001F4BE \u062a\u0646\u0638\u06cc\u0645\u0627\u062a \u0630\u062e\u06cc\u0631\u0647 \u0634\u062f!"
 	case "credentials_changed":
@@ -575,6 +583,9 @@ func handleDashboard(w http.ResponseWriter, r *http.Request) {
 			toastIsError = true
 		case "node_edit_failed":
 			toastMsg = "\u274C \u062e\u0637\u0627 \u062f\u0631 \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0646\u0648\u062f"
+			toastIsError = true
+		case "node_delete_failed":
+			toastMsg = "❌ خطا در حذف نود"
 			toastIsError = true
 		case "settings_save_failed":
 			toastMsg = "\u274C \u062e\u0637\u0627 \u062f\u0631 \u0630\u062e\u06cc\u0631\u0647 \u062a\u0646\u0638\u06cc\u0645\u0627\u062a"

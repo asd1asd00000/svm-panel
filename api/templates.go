@@ -1022,7 +1022,11 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 						<button @click="sortBy('username')" class="col-span-2 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
 						<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
 						<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
-						<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
+						<div class="col-span-3 flex items-center justify-center gap-3">
+							<button @click="sortBy('data_used')" class="hover:text-cyan-300 transition flex items-center gap-1">مصرف <span x-text="sortIcon('data_used')"></span></button>
+							<span class="text-white/10">|</span>
+							<button @click="sortBy('data_limit')" class="hover:text-cyan-300 transition flex items-center gap-1">حجم کل <span x-text="sortIcon('data_limit')"></span></button>
+						</div>
 						<button @click="sortBy('expiry')" class="col-span-3 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
 					</div>
 					<div class="divide-y divide-white/10">
@@ -1589,7 +1593,7 @@ func panelDataScript() string {
 			userFilter: "all",
 			currentPage: 1,
 			itemsPerPage: readStoredPerPage(),
-			sortCol: "username",
+			sortCol: "", 
 			sortAsc: true,
 			chartRendered: false,
 			chart: null,
@@ -1654,16 +1658,21 @@ func panelDataScript() string {
 							String(u.comment || "").toLowerCase().indexOf(q) !== -1;
 					});
 				}
-				var dir = this.sortAsc ? 1 : -1;
+				
 				var col = this.sortCol;
-				list.sort(function(a, b) {
-					var av = self.sortValue(a, col);
-					var bv = self.sortValue(b, col);
-					if (typeof av === "string" || typeof bv === "string") {
-						return String(av).localeCompare(String(bv)) * dir;
-					}
-					return ((av || 0) - (bv || 0)) * dir;
-				});
+				if (!col) {
+					list.reverse();
+				} else {
+					var dir = this.sortAsc ? 1 : -1;
+					list.sort(function(a, b) {
+						var av = self.sortValue(a, col);
+						var bv = self.sortValue(b, col);
+						if (typeof av === "string" || typeof bv === "string") {
+							return String(av).localeCompare(String(bv)) * dir;
+						}
+						return ((av || 0) - (bv || 0)) * dir;
+					});
+				}
 				return list;
 			},
 			get totalPages() { return Math.max(1, Math.ceil((this.sortedUsers || []).length / this.itemsPerPage)); },
@@ -1697,14 +1706,19 @@ func panelDataScript() string {
 			sortValue: function(user, col) {
 				if (col === "username") return String(user.username || "").toLowerCase();
 				if (col === "data_used") return Number(user.data_used || 0);
+				if (col === "data_limit") return Number(user.data_limit || 0);
 				if (col === "expiry") return Number(user.expiry_unix || 0);
 				if (col === "last_seen") return Number(user.last_seen || 0);
 				if (col === "status") return this.isActive(user) ? (this.onlineMap[user.username] ? 2 : 1) : 0;
-				return String(user.username || "").toLowerCase();
+				return 0;
 			},
 			sortBy: function(col) {
-				if (this.sortCol === col) this.sortAsc = !this.sortAsc;
-				else { this.sortCol = col; this.sortAsc = col === "username"; }
+				if (this.sortCol === col) {
+					this.sortAsc = !this.sortAsc;
+				} else {
+					this.sortCol = col;
+					this.sortAsc = (col === "username");
+				}
 				this.currentPage = 1;
 			},
 			sortIcon: function(col) {

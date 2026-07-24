@@ -1019,18 +1019,18 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 				</div>
 				<div class="surface rounded-3xl overflow-hidden">
 					<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-						<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
+						<button @click="sortBy('username')" class="col-span-2 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
 						<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
 						<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
 						<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
-						<button @click="sortBy('expiry')" class="col-span-2 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
+						<button @click="sortBy('expiry')" class="col-span-3 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
 					</div>
 					<div class="divide-y divide-white/10">
 						<template x-for="(user, index) in paginatedUsers" :key="user.username">
 							<article x-data="{ expanded:false }" class="transition border-b border-white/5 hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.05]'">
 								<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
 									
-									<div class="col-span-3 flex items-center gap-3 min-w-0">
+									<div class="col-span-2 flex items-center gap-3 min-w-0">
 										<span class="text-xl" x-text="isActive(user) ? (onlineMap[user.username] ? '🟢' : '⚪') : '🔴'"></span>
 										<div class="min-w-0">
 											<p class="font-black text-sm truncate text-slate-100" x-text="user.username"></p>
@@ -1038,7 +1038,6 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 										</div>
 									</div>
 									
-									<!-- آخرین اتصال -->
 									<div class="col-span-3 flex justify-center">
 										<template x-if="user.last_seen > 0">
 											<div class="inline-flex items-center justify-center gap-2 px-2.5 py-1.5 rounded-[10px] border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
@@ -1053,12 +1052,10 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 										</template>
 									</div>
 									
-									<!-- وضعیت -->
 									<div class="col-span-1 flex justify-center">
 										<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
 									</div>
 									
-									<!-- مصرف -->
 									<div class="col-span-3 flex justify-center">
 										<div class="inline-flex items-center justify-center gap-2 px-2.5 py-1.5 rounded-[10px] border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 											<svg class="w-3.5 h-3.5 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
@@ -1068,8 +1065,7 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 										</div>
 									</div>
 									
-									<!-- انقضا -->
-									<div class="col-span-2 flex justify-end">
+									<div class="col-span-3 flex justify-end">
 										<div class="inline-flex items-center justify-center gap-2 px-2.5 py-1.5 rounded-[10px] border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 											<svg class="w-3.5 h-3.5 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
 											<span class="text-xs font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>

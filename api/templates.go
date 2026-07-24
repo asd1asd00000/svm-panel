@@ -112,6 +112,9 @@ func isHexColor(s string) bool {
 	return true
 }
 
+// chartRangeOpts is rendered as static HTML (one button per range) so the list
+// is always fully clickable (x-for inside a late-init x-show misbehaved in the
+// node iframe and only the first item was selectable).
 var chartRangeOpts = []struct{ V, L string }{
 	{"1h", "۱ ساعت"}, {"2h", "۲ ساعت"}, {"4h", "۴ ساعت"},
 	{"6h", "۶ ساعت"}, {"12h", "۱۲ ساعت"}, {"24h", "۲۴ ساعت"},
@@ -120,6 +123,10 @@ var chartRangeOpts = []struct{ V, L string }{
 	{"90d", "۳ ماه"}, {"all", "همه"},
 }
 
+// chartRangeDropdownHTML is a self-contained custom range selector. It owns its
+// own Alpine scope (svmRangeDropdown), has an opaque (non-blur) background, and
+// broadcasts the chosen range via the "svm-range-change" window event so any
+// chart component (even in a different scope / iframe) can react.
 func chartRangeDropdownHTML() string {
 	var b strings.Builder
 	b.WriteString(`<div class="relative shrink-0" x-data="svmRangeDropdown()" @click.outside="open=false">`)
@@ -157,12 +164,25 @@ func renderLoginHTML() string {
 	<style>
 		* { box-sizing: border-box; }
 		body { font-family: 'Vazirmatn', sans-serif; }
-		.mesh { background: radial-gradient(circle at 15% 20%, rgba(6, 182, 212, .25), transparent 34%), radial-gradient(circle at 85% 10%, rgba(139, 92, 246, .18), transparent 30%), radial-gradient(circle at 50% 90%, rgba(16, 185, 129, .16), transparent 35%), #020617; }
-		.grid-bg { background-image: linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(circle, black 40%, transparent 78%); }
+		.mesh {
+			background:
+				radial-gradient(circle at 15% 20%, rgba(6, 182, 212, .25), transparent 34%),
+				radial-gradient(circle at 85% 10%, rgba(139, 92, 246, .18), transparent 30%),
+				radial-gradient(circle at 50% 90%, rgba(16, 185, 129, .16), transparent 35%),
+				#020617;
+		}
+		.grid-bg {
+			background-image:
+				linear-gradient(rgba(148,163,184,.06) 1px, transparent 1px),
+				linear-gradient(90deg, rgba(148,163,184,.06) 1px, transparent 1px);
+			background-size: 44px 44px;
+			mask-image: radial-gradient(circle, black 40%, transparent 78%);
+		}
 	</style>
 </head>
 <body class="mesh min-h-screen text-slate-100 flex items-center justify-center p-4 overflow-hidden">
 	<div class="fixed inset-0 grid-bg pointer-events-none"></div>
+
 	<main class="relative w-full max-w-md mt-10">
 		<div class="absolute -inset-1 rounded-[2rem] bg-gradient-to-l from-cyan-500 via-indigo-500 to-emerald-500 opacity-40 blur-2xl"></div>
 		<section class="relative w-full rounded-[2rem] border border-white/10 bg-slate-900/80 backdrop-blur-2xl shadow-2xl p-6 sm:p-9 pt-16 sm:pt-20">
@@ -171,10 +191,12 @@ func renderLoginHTML() string {
 				<img src="/static/logo.png" alt="svm-panel" class="relative w-28 h-28 sm:w-32 sm:h-32 object-contain drop-shadow-[0_0_25px_rgba(34,211,238,0.5)]" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
 				<div class="relative w-28 h-28 sm:w-32 sm:h-32 items-center justify-center" style="display:none"><span class="text-6xl">⚡</span></div>
 			</div>
+
 			<div class="text-center mb-7">
 				<h1 class="text-3xl font-black tracking-tight bg-gradient-to-l from-cyan-300 to-emerald-300 bg-clip-text text-transparent">SVM PANEL</h1>
 				<p class="text-sm text-slate-400 mt-2">پنل مدیریت کاربران ssh vpn</p>
 			</div>
+
 			<form action="/admin/login" method="POST" class="w-full space-y-4">
 				<div class="w-full">
 					<label class="block text-xs font-bold mb-2 text-slate-300">نام کاربری ادمین</label>
@@ -353,7 +375,13 @@ func renderSubHTML(username, barColor string, percent float64, statusBadge, onli
 		* { box-sizing: border-box; }
 		body { font-family:'Vazirmatn', Tahoma, sans-serif; background:#020617; color:#F8FAFC; margin:0; min-height:100vh; }
 		[x-cloak]{display:none !important;}
-		.bg-mesh { background: radial-gradient(circle at 15% 15%, rgba(34,211,238,.20), transparent 33%), radial-gradient(circle at 85% 8%, rgba(167,139,250,.16), transparent 30%), radial-gradient(circle at 50% 90%, rgba(52,211,153,.14), transparent 36%), #020617; }
+		.bg-mesh {
+			background:
+				radial-gradient(circle at 15% 15%, rgba(34,211,238,.20), transparent 33%),
+				radial-gradient(circle at 85% 8%, rgba(167,139,250,.16), transparent 30%),
+				radial-gradient(circle at 50% 90%, rgba(52,211,153,.14), transparent 36%),
+				#020617;
+		}
 		.glass { background: rgba(15,23,42,.72); backdrop-filter: blur(18px); border:1px solid rgba(255,255,255,.09); box-shadow:0 24px 80px rgba(0,0,0,.35); }
 		.info-box { background: rgba(2,6,23,.55); border:1px solid rgba(148,163,184,.18); border-radius:18px; padding:16px; margin-top:16px; }
 		.info-box h3 { margin:0 0 14px 0; font-size:15px; color:#E2E8F0; text-align:center; font-weight:800; }
@@ -530,7 +558,13 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 		.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 		input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
 		input[type=number] { -moz-appearance:textfield; }
-		.mesh { background: radial-gradient(circle at 12% 10%, rgba(34,211,238,.20), transparent 28%), radial-gradient(circle at 92% 8%, rgba(167,139,250,.14), transparent 32%), radial-gradient(circle at 50% 105%, rgba(52,211,153,.12), transparent 38%), #020617; }
+		.mesh {
+			background:
+				radial-gradient(circle at 12% 10%, rgba(34,211,238,.20), transparent 28%),
+				radial-gradient(circle at 92% 8%, rgba(167,139,250,.14), transparent 32%),
+				radial-gradient(circle at 50% 105%, rgba(52,211,153,.12), transparent 38%),
+				#020617;
+		}
 		.surface { background:rgba(15,23,42,.74); border:1px solid rgba(255,255,255,.08); backdrop-filter:blur(16px); box-shadow:0 18px 60px rgba(0,0,0,.25); }
 		.surface-soft { background:rgba(2,6,23,.45); border:1px solid rgba(148,163,184,.14); }
 		.apexcharts-tooltip { background:#0f172a !important; border:1px solid #334155 !important; color:#f8fafc !important; }
@@ -555,9 +589,9 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 	<header class="sticky top-0 z-40 px-4 py-3 border-b border-white/10 bg-slate-950/70 backdrop-blur-2xl">
 		<div class="flex items-center justify-between gap-3">
 			<div class="flex items-center gap-2 min-w-0">
-				<div class="w-16 h-16 relative shrink-0 flex items-center justify-center">
+								<div class="w-16 h-16 relative shrink-0 flex items-center justify-center">
 					<img src="/static/logo.png" alt="SVM PANEL" class="max-w-full max-h-full object-contain mix-blend-screen" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-					<div class="absolute inset-0 items-center justify-center" style="display:none"><span class="text-3xl">⚡</span></div>
+										<div class="absolute inset-0 items-center justify-center" style="display:none"><span class="text-3xl">⚡</span></div>
 				</div>
 				<div class="min-w-0">
 					<h1 class="font-black text-base sm:text-lg bg-gradient-to-l from-cyan-300 to-emerald-300 bg-clip-text text-transparent leading-tight truncate">SVM PANEL</h1>
@@ -575,12 +609,18 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 			<div class="grid grid-cols-2 gap-3">
 				<div class="surface rounded-3xl p-4">
 					<p class="text-xs text-slate-400">CPU</p>
-					<div class="flex items-end justify-between mt-2"><span class="text-2xl font-black" x-text="cpu.toFixed(1) + '%'"></span><span class="text-xl">🧠</span></div>
+					<div class="flex items-end justify-between mt-2">
+						<span class="text-2xl font-black" x-text="cpu.toFixed(1) + '%'"></span>
+						<span class="text-xl">🧠</span>
+					</div>
 					<div class="h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden"><div class="h-full bg-cyan-400" :style="'width:' + Math.min(cpu,100) + '%'"></div></div>
 				</div>
 				<div class="surface rounded-3xl p-4">
 					<p class="text-xs text-slate-400">RAM</p>
-					<div class="flex items-end justify-between mt-2"><span class="text-2xl font-black" x-text="ram.toFixed(1) + '%'"></span><span class="text-xl">💾</span></div>
+					<div class="flex items-end justify-between mt-2">
+						<span class="text-2xl font-black" x-text="ram.toFixed(1) + '%'"></span>
+						<span class="text-xl">💾</span>
+					</div>
 					<div class="h-1.5 bg-slate-800 rounded-full mt-3 overflow-hidden"><div class="h-full bg-violet-400" :style="'width:' + Math.min(ram,100) + '%'"></div></div>
 				</div>
 			</div>
@@ -602,7 +642,7 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 				<div class="fs-head flex items-center justify-between mb-3 gap-2 relative z-30">
 					<div class="min-w-0">
 						<h3 class="font-black text-slate-100">📊 مصرف ترافیک</h3>
-						<p class="text-[11px] text-slate-500 mt-0.5">مجموع ترافیک همهٔ سرورها</p>
+						<p class="text-[11px] text-slate-500 mt-0.5">مجموع ترافیک همهٔ سرورها در بازهٔ انتخابی</p>
 					</div>
 					<div class="flex items-center gap-2 shrink-0">
 						{{safeHTML .RangeDropdown}}
@@ -611,8 +651,10 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 				</div>
 				<div class="fs-chart h-[260px] relative z-0"><div id="dashboardChart" class="w-full h-full"></div></div>
 				<div class="fs-foot mt-3 pt-3 border-t border-white/5">
-					<p class="text-xs font-black" :class="chartTrendUp === null ? 'text-slate-400' : (chartTrendUp ? 'text-emerald-400' : 'text-rose-400')"><span x-text="chartTrendText"></span></p>
-					<p class="text-[11px] text-slate-400 mt-1">مصرف بازه: <span class="text-slate-100 font-black" x-text="chartTotal + ' GB'"></span></p>
+					<p class="text-xs font-black" :class="chartTrendUp === null ? 'text-slate-400' : (chartTrendUp ? 'text-emerald-400' : 'text-rose-400')">
+						<span x-text="chartTrendText"></span>
+					</p>
+					<p class="text-[11px] text-slate-400 mt-1">مصرف در این بازه: <span class="text-slate-100 font-black" x-text="chartTotal + ' GB'"></span></p>
 				</div>
 			</div>
 			<div class="surface rounded-3xl p-4">
@@ -629,6 +671,13 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 					</template>
 				</div>
 			</div>
+			<div class="surface rounded-3xl p-4 flex items-center justify-between">
+				<div>
+					<p class="font-black text-slate-100">اتوبکاپ تلگرام</p>
+					<p class="text-xs text-slate-500 mt-1">وضعیت بکاپ‌گیری خودکار</p>
+				</div>
+				<span class="rounded-full border px-3 py-1 text-xs font-black {{.BackupColor}}">{{.BackupText}}</span>
+			</div>
 		</section>
 		<section x-show="activeTab === 'users'" x-transition class="space-y-3">
 			<div class="surface rounded-2xl p-2 grid grid-cols-3 gap-2">
@@ -639,161 +688,107 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 			<div class="flex items-center gap-2">
 				<button @click="prepareCreateUser()" class="flex-1 rounded-2xl bg-gradient-to-l from-cyan-500 to-emerald-500 text-slate-950 font-black py-2.5 shadow-lg shadow-cyan-500/15 active:scale-[.99]">+ کاربر جدید</button>
 				<select x-model.number="itemsPerPage" @change="onPerPageChange()" class="shrink-0 bg-slate-950/80 border border-slate-700 rounded-2xl px-2 py-2.5 text-xs font-black text-slate-200 outline-none focus:border-cyan-400">
-					<option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option>
+					<option value="10">10</option>
+					<option value="20">20</option>
+					<option value="50">50</option>
+					<option value="100">100</option>
 				</select>
 			</div>
-			
-			<div class="surface rounded-3xl overflow-hidden flex flex-col">
-				<div class="w-full overflow-x-auto no-scrollbar">
-					<div class="min-w-[1250px]">
-						<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-							<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
-							<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
-							<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
-							<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
-							<button @click="sortBy('expiry')" class="col-span-2 text-center hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
-						</div>
-						<div class="divide-y divide-white/5">
-							<template x-for="(user, index) in paginatedUsers" :key="user.username">
-								<article x-data="{ expanded:false }" class="transition hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
-									<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
-										
-										<div class="col-span-3 flex items-center gap-3 min-w-0">
-											<span class="text-xl" x-text="isActive(user) ? (onlineMap[user.username] ? '🟢' : '⚪') : '🔴'"></span>
-											<div class="min-w-0">
-												<p class="font-black text-sm truncate text-slate-100" x-text="user.username"></p>
-												<p class="text-[10px] text-slate-400 mt-1 truncate" x-show="user.comment">💬 یادداشت دارد</p>
-											</div>
-										</div>
-										
-										<div class="col-span-3 flex justify-center">
-											<template x-if="user.last_seen > 0">
-												<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-													<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-													<span class="text-[13px] font-black text-slate-100 tracking-widest" x-text="splitDateFa(user.last_seen).date"></span>
-													<span class="text-indigo-400/50 font-black">|</span>
-													<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-widest" x-text="splitDateFa(user.last_seen).time"></span>
-												</div>
-											</template>
-											<template x-if="!user.last_seen || user.last_seen <= 0">
-												<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
-											</template>
-										</div>
-										
-										<div class="col-span-1 flex justify-center">
-											<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
-										</div>
-										
-										<div class="col-span-3 flex justify-center">
-											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-												<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-												<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
-												<span class="text-cyan-400/50 font-black">|</span>
-												<span class="text-[13px] font-mono font-bold text-cyan-200 tracking-widest" x-text="limitText(user)"></span>
-											</div>
-										</div>
-										
-										<div class="col-span-2 flex justify-center">
-											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-												<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-												<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
-												<span class="text-rose-400/50 font-black">|</span>
-												<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFaEn(user.expiry_unix)"></span>
-											</div>
-										</div>
-										
-									</button>
-									<div x-show="expanded" x-collapse class="px-6 pb-6 border-t border-white/5 pt-4">
-										<div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
-											<div class="h-full rounded-full" :class="isActive(user) ? 'bg-cyan-400' : 'bg-rose-500'" :style="'width:' + usagePercent(user) + '%'"></div>
-										</div>
-										<template x-if="user.comment">
-											<div class="surface-soft rounded-2xl p-4 text-sm mb-4">
-												<span class="text-slate-500 ml-2">یادداشت:</span>
-												<span class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></span>
-											</div>
-										</template>
-										<div class="flex items-center gap-3">
-											<button @click="prepareEditUser(user)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-4 py-2 text-sm font-black transition">✏️ ویرایش</button>
-											<a :href="'/sub/' + user.sub_token" target="_blank" class="rounded-2xl bg-blue-500/10 text-blue-300 hover:bg-blue-500 hover:text-white px-4 py-2 text-sm font-black transition">👁️ مشاهده</a>
-											<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500 hover:text-slate-950 px-4 py-2 text-sm font-black transition">🔗 لینک</button>
-											<div class="flex-1"></div>
-											<form action="/admin/actions" method="POST" onsubmit="return confirm('ریست ترافیک؟')">
-												<input type="hidden" name="action" value="reset_traffic">
-												<input type="hidden" name="current_tab" value="users">
-												<input type="hidden" name="username" :value="user.username">
-												<button type="submit" class="rounded-2xl bg-orange-500/10 text-orange-300 hover:bg-orange-500 hover:text-white px-4 py-2 text-sm font-black transition">🔄 ریست</button>
-											</form>
-											<form action="/admin/actions" method="POST" onsubmit="return confirm('حذف کاربر؟')">
-												<input type="hidden" name="action" value="delete_user">
-												<input type="hidden" name="current_tab" value="users">
-												<input type="hidden" name="username" :value="user.username">
-												<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-4 py-2 text-sm font-black transition">🗑️ حذف</button>
-											</form>
-										</div>
+			<div class="space-y-2">
+				<template x-for="(user, index) in paginatedUsers" :key="user.username">
+					<article x-data="{ expanded:false }" class="rounded-2xl overflow-hidden border border-white/10 transition" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.05]'">
+						<button @click="expanded=!expanded" class="w-full px-3 py-2.5 text-right">
+							<div class="flex items-center justify-between gap-2">
+								<div class="flex items-center gap-2.5 min-w-0">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 shrink-0" :class="isActive(user) ? (onlineMap[user.username] ? 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,.7)]' : 'text-white/35') : 'text-rose-400 drop-shadow-[0_0_5px_rgba(251,113,133,.6)]'">
+										<path d="M1.5 8.6a18 18 0 0 1 21 0"></path>
+										<path d="M5 12.1a13 13 0 0 1 14 0"></path>
+										<path d="M8.5 15.6a8 8 0 0 1 7 0"></path>
+										<circle cx="12" cy="19.4" r="1.15" fill="currentColor" stroke="none"></circle>
+									</svg>
+									<div class="min-w-0">
+										<p class="font-black text-sm truncate" x-text="user.username"></p>
+										<p class="text-[10px] text-slate-400 mt-0.5" x-text="'🕒 ' + dateFa(user.last_seen, true)"></p>
+										<p class="text-[10px] text-slate-500 truncate mt-0.5" x-show="user.comment">💬 یادداشت دارد</p>
 									</div>
-								</article>
-							</template>
+								</div>
+								<div class="text-left shrink-0">
+									<p class="font-mono text-xs font-black" x-text="formatBytes(user.data_used || 0)"></p>
+									<p class="font-mono text-[10px] text-slate-500" x-text="limitText(user)"></p>
+								</div>
+							</div>
+							<div class="h-1 bg-slate-800 rounded-full overflow-hidden mt-2">
+								<div class="h-full rounded-full" :class="isActive(user) ? 'bg-cyan-400' : 'bg-rose-500'" :style="'width:' + usagePercent(user) + '%'"></div>
+							</div>
+						</button>
+						<div x-show="expanded" x-collapse class="px-3 pb-3">
+							<div class="surface-soft rounded-2xl p-3 text-xs space-y-2">
+								<div class="flex justify-between gap-2"><span class="text-slate-500">انقضا</span><span class="font-bold" x-text="dateFa(user.expiry_unix, false)"></span></div>
+								<div class="flex justify-between gap-2"><span class="text-slate-500">باقی‌مانده</span><span class="font-black" :class="daysLeft(user) > 3 ? 'text-emerald-300' : 'text-amber-300'" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'"></span></div>
+								<div class="flex justify-between gap-2"><span class="text-slate-500">آخرین اتصال</span><span class="font-bold" x-text="dateFa(user.last_seen, true)"></span></div>
+								<div x-show="user.comment" class="pt-2 border-t border-slate-700/60 mt-2">
+									<p class="text-slate-500 mb-1">یادداشت</p>
+									<p class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></p>
+								</div>
+							</div>
+							<div class="grid grid-cols-2 gap-2 mt-3">
+								<button @click="prepareEditUser(user)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 py-2 text-xs font-black">✏️ ویرایش</button>
+								<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 py-2 text-xs font-black">🔗 لینک</button>
+								<a :href="'/sub/' + user.sub_token" target="_blank" class="rounded-2xl bg-blue-500/10 text-blue-300 py-2 text-xs font-black text-center">👁️ مشاهده</a>
+								<form action="/admin/actions" method="POST" onsubmit="return confirm('ریست ترافیک؟')">
+									<input type="hidden" name="action" value="reset_traffic">
+									<input type="hidden" name="current_tab" value="users">
+									<input type="hidden" name="username" :value="user.username">
+									<button type="submit" class="w-full rounded-2xl bg-orange-500/10 text-orange-300 py-2 text-xs font-black">🔄 ریست</button>
+								</form>
+								<form action="/admin/actions" method="POST" onsubmit="return confirm('حذف کاربر؟')" class="col-span-2">
+									<input type="hidden" name="action" value="delete_user">
+									<input type="hidden" name="current_tab" value="users">
+									<input type="hidden" name="username" :value="user.username">
+									<button type="submit" class="w-full rounded-2xl bg-rose-500/10 text-rose-300 py-2 text-xs font-black">🗑️ حذف کاربر</button>
+								</form>
+							</div>
 						</div>
-					</div>
-				</div>
-				<div class="bg-slate-950/70 border-t border-white/10 p-4 flex items-center justify-between shrink-0">
-					<button @click="if(currentPage>1) currentPage--" class="rounded-2xl px-5 py-2 text-cyan-300 hover:bg-white/5 font-black">قبلی</button>
-					<span class="text-sm font-black" x-text="'صفحه ' + currentPage + ' از ' + totalPages"></span>
-					<button @click="if(currentPage<totalPages) currentPage++" class="rounded-2xl px-5 py-2 text-cyan-300 hover:bg-white/5 font-black">بعدی</button>
-				</div>
+					</article>
+				</template>
+			</div>
+			<div class="surface rounded-2xl p-2 flex items-center justify-between">
+				<button @click="if(currentPage>1) currentPage--" class="text-cyan-300 font-black px-4 py-2">قبلی</button>
+				<span class="text-xs font-black" x-text="currentPage + ' / ' + totalPages"></span>
+				<button @click="if(currentPage<totalPages) currentPage++" class="text-cyan-300 font-black px-4 py-2">بعدی</button>
 			</div>
 		</section>
 		<section x-show="activeTab === 'nodes'" x-transition class="space-y-3">
-			<div class="surface rounded-3xl overflow-hidden flex flex-col">
-				<div class="w-full overflow-x-auto no-scrollbar">
-					<div class="min-w-[1250px]">
-						<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-							<div class="col-span-5">سرور نود</div>
-							<div class="col-span-2 text-center">وضعیت</div>
-							<div class="col-span-3 text-left">ترافیک کل</div>
-							<div class="col-span-2 text-left">آخرین پینگ</div>
+			<template x-for="node in nodes" :key="node.IP">
+				<article x-data="{ expanded:false }" class="surface rounded-3xl overflow-hidden">
+					<button @click="expanded=!expanded" class="w-full p-4 text-right flex items-center justify-between gap-3">
+						<div class="flex items-center gap-3 min-w-0">
+							<span class="text-xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
+							<div class="min-w-0">
+								<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
+								<p class="font-mono text-[10px] text-slate-500 truncate" x-text="node.IP"></p>
+							</div>
 						</div>
-						<div class="divide-y divide-white/5">
-							<template x-for="(node, index) in nodes" :key="node.IP">
-								<article x-data="{ expanded:false }" class="transition hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
-									<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
-										<div class="col-span-5 flex items-center gap-3 min-w-0">
-											<span class="text-2xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
-											<div class="min-w-0">
-												<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
-												<p class="font-mono text-xs text-slate-500 truncate" x-text="node.IP"></p>
-											</div>
-										</div>
-										<div class="col-span-2 text-center">
-											<span class="rounded-xl px-3 py-1 text-xs font-black" :class="node.IsOnline ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="node.IsOnline ? 'آنلاین' : 'آفلاین'"></span>
-										</div>
-										<div class="col-span-3 text-left font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
-										<div class="col-span-2 text-left text-xs text-slate-400" x-text="dateFaEn(node.LastSeen)"></div>
-									</button>
-									<div x-show="expanded" x-collapse class="px-6 pb-6 border-t border-white/5 pt-4">
-										<div class="surface-soft rounded-2xl p-4 grid grid-cols-2 gap-4 text-sm mb-4">
-											<div><span class="text-slate-500 ml-2">دامنه:</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
-											<div><span class="text-slate-500 ml-2">آی‌پی:</span><span class="font-mono" x-text="node.IP"></span></div>
-										</div>
-										<div class="flex gap-3">
-											<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 px-5 py-2 text-sm font-black transition">📊 نمودار</button>
-											<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-5 py-2 text-sm font-black transition">✏️ ویرایش</button>
-											<div class="flex-1"></div>
-											<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود حذف می‌شود ولی تاریخچه ترافیک آن باقی می‌ماند. حذف شود؟')">
-												<input type="hidden" name="action" value="delete_node">
-												<input type="hidden" name="current_tab" value="nodes">
-												<input type="hidden" name="ip" :value="node.IP">
-												<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-5 py-2 text-sm font-black transition">🗑️ حذف</button>
-											</form>
-										</div>
-									</div>
-								</article>
-							</template>
+						<span class="font-mono text-xs font-black shrink-0" x-text="formatGB(node.TotalTraffic || 0)"></span>
+					</button>
+					<div x-show="expanded" x-collapse class="px-4 pb-4">
+						<div class="surface-soft rounded-2xl p-3 text-xs space-y-2 mb-3">
+							<div class="flex justify-between"><span class="text-slate-500">دامنه</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
+							<div class="flex justify-between"><span class="text-slate-500">آخرین پینگ</span><span x-text="dateFa(node.LastSeen, true)"></span></div>
 						</div>
+						<div class="grid grid-cols-2 gap-2">
+							<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 py-2 text-xs font-black">📊 نمودار</button>
+							<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 py-2 text-xs font-black">✏️ ویرایش</button>
+						</div>
+						<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')" class="mt-2">
+							<input type="hidden" name="action" value="delete_node">
+							<input type="hidden" name="current_tab" value="nodes">
+							<input type="hidden" name="ip" :value="node.IP">
+							<button type="submit" class="w-full rounded-2xl bg-rose-500/10 text-rose-300 py-2 text-xs font-black">🗑️ حذف نود</button>
+						</form>
 					</div>
-				</div>
-			</div>
+				</article>
+			</template>
 		</section>
 		<section x-show="activeTab === 'settings'" x-transition class="space-y-4">
 			<div class="surface rounded-3xl p-4">
@@ -827,7 +822,7 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 				<input type="text" name="tg_chat_id" value="{{.TgChatID}}" placeholder="Chat ID" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" placeholder="ساعت بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="رمز فایل زیپ بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات</button>
+				<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات کلی</button>
 			</form>
 		</section>
 	</main>
@@ -866,7 +861,13 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 		::-webkit-scrollbar-thumb { background:#334155; border-radius:99px; }
 		input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
 		input[type=number] { -moz-appearance:textfield; }
-		.mesh { background: radial-gradient(circle at 10% 5%, rgba(34,211,238,.18), transparent 28%), radial-gradient(circle at 88% 10%, rgba(167,139,250,.14), transparent 32%), radial-gradient(circle at 50% 100%, rgba(52,211,153,.10), transparent 40%), #020617; }
+		.mesh {
+			background:
+				radial-gradient(circle at 10% 5%, rgba(34,211,238,.18), transparent 28%),
+				radial-gradient(circle at 88% 10%, rgba(167,139,250,.14), transparent 32%),
+				radial-gradient(circle at 50% 100%, rgba(52,211,153,.10), transparent 40%),
+				#020617;
+		}
 		.surface { background:rgba(15,23,42,.72); border:1px solid rgba(255,255,255,.08); backdrop-filter:blur(16px); box-shadow:0 20px 70px rgba(0,0,0,.25); }
 		.surface-soft { background:rgba(2,6,23,.45); border:1px solid rgba(148,163,184,.14); }
 		.nav-btn { width:100%; display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:18px; font-weight:900; transition:.2s; }
@@ -1016,101 +1017,97 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 						<button @click="prepareCreateUser()" class="rounded-2xl bg-gradient-to-l from-cyan-500 to-emerald-500 text-slate-950 px-6 py-2.5 font-black shadow-lg shadow-cyan-500/15">+ کاربر جدید</button>
 					</div>
 				</div>
-				<div class="surface rounded-3xl overflow-hidden flex flex-col">
-					<div class="w-full overflow-x-auto no-scrollbar">
-						<div class="min-w-[1250px]">
-							<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-								<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
-								<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
-								<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
-								<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
-								<button @click="sortBy('expiry')" class="col-span-2 text-center hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
-							</div>
-							<div class="divide-y divide-white/5">
-								<template x-for="(user, index) in paginatedUsers" :key="user.username">
-									<article x-data="{ expanded:false }" class="transition hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
-										<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
-											
-											<div class="col-span-3 flex items-center gap-3 min-w-0">
-												<span class="text-xl" x-text="isActive(user) ? (onlineMap[user.username] ? '🟢' : '⚪') : '🔴'"></span>
-												<div class="min-w-0">
-													<p class="font-black text-sm truncate text-slate-100" x-text="user.username"></p>
-													<p class="text-[10px] text-slate-400 mt-1 truncate" x-show="user.comment">💬 یادداشت دارد</p>
-												</div>
-											</div>
-											
-											<div class="col-span-3 flex justify-center">
-												<template x-if="user.last_seen > 0">
-													<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-														<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-														<span class="text-[13px] font-black text-slate-100 tracking-widest" x-text="splitDateFa(user.last_seen).date"></span>
-														<span class="text-indigo-400/50 font-black">|</span>
-														<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-widest" x-text="splitDateFa(user.last_seen).time"></span>
-													</div>
-												</template>
-												<template x-if="!user.last_seen || user.last_seen <= 0">
-													<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
-												</template>
-											</div>
-											
-											<div class="col-span-1 flex justify-center">
-												<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
-											</div>
-											
-											<div class="col-span-3 flex justify-center">
-												<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-													<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-													<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
-													<span class="text-cyan-400/50 font-black">|</span>
-													<span class="text-[13px] font-mono font-bold text-cyan-200 tracking-widest" x-text="limitText(user)"></span>
-												</div>
-											</div>
-											
-											<div class="col-span-2 flex justify-center">
-												<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-													<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-													<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
-													<span class="text-rose-400/50 font-black">|</span>
-													<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFaEn(user.expiry_unix)"></span>
-												</div>
-											</div>
-											
-										</button>
-										<div x-show="expanded" x-collapse class="px-6 pb-6 border-t border-white/5 pt-4">
-											<div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
-												<div class="h-full rounded-full" :class="isActive(user) ? 'bg-cyan-400' : 'bg-rose-500'" :style="'width:' + usagePercent(user) + '%'"></div>
-											</div>
-											<template x-if="user.comment">
-												<div class="surface-soft rounded-2xl p-4 text-sm mb-4">
-													<span class="text-slate-500 ml-2">یادداشت:</span>
-													<span class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></span>
-												</div>
-											</template>
-											<div class="flex items-center gap-3">
-												<button @click="prepareEditUser(user)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-4 py-2 text-sm font-black transition">✏️ ویرایش</button>
-												<a :href="'/sub/' + user.sub_token" target="_blank" class="rounded-2xl bg-blue-500/10 text-blue-300 hover:bg-blue-500 hover:text-white px-4 py-2 text-sm font-black transition">👁️ مشاهده</a>
-												<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500 hover:text-slate-950 px-4 py-2 text-sm font-black transition">🔗 کپی لینک</button>
-												<div class="flex-1"></div>
-												<form action="/admin/actions" method="POST" onsubmit="return confirm('ریست ترافیک؟')">
-													<input type="hidden" name="action" value="reset_traffic">
-													<input type="hidden" name="current_tab" value="users">
-													<input type="hidden" name="username" :value="user.username">
-													<button type="submit" class="rounded-2xl bg-orange-500/10 text-orange-300 hover:bg-orange-500 hover:text-white px-4 py-2 text-sm font-black transition">🔄 ریست</button>
-												</form>
-												<form action="/admin/actions" method="POST" onsubmit="return confirm('حذف کاربر؟')">
-													<input type="hidden" name="action" value="delete_user">
-													<input type="hidden" name="current_tab" value="users">
-													<input type="hidden" name="username" :value="user.username">
-													<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-4 py-2 text-sm font-black transition">🗑️ حذف</button>
-												</form>
-											</div>
-										</div>
-									</article>
-								</template>
-							</div>
-						</div>
+				<div class="surface rounded-3xl overflow-hidden">
+					<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
+						<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
+						<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
+						<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
+						<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
+						<button @click="sortBy('expiry')" class="col-span-2 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
 					</div>
-					<div class="bg-slate-950/70 border-t border-white/10 p-4 flex items-center justify-between shrink-0">
+					<div class="divide-y divide-white/10">
+						<template x-for="(user, index) in paginatedUsers" :key="user.username">
+							<article x-data="{ expanded:false }" class="transition border-b border-white/5 hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.05]'">
+								<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
+									
+									<div class="col-span-3 flex items-center gap-3 min-w-0">
+										<span class="text-xl" x-text="isActive(user) ? (onlineMap[user.username] ? '🟢' : '⚪') : '🔴'"></span>
+										<div class="min-w-0">
+											<p class="font-black text-sm truncate text-slate-100" x-text="user.username"></p>
+											<p class="text-[10px] text-slate-400 mt-1 truncate" x-show="user.comment">💬 یادداشت دارد</p>
+										</div>
+									</div>
+									
+									<div class="col-span-3 flex justify-center">
+										<template x-if="user.last_seen > 0">
+											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+												<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+												<span class="text-[13px] font-black text-slate-100 tracking-widest" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
+												<span class="text-indigo-400/50 font-black">|</span>
+												<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-widest" x-text="splitDateFa(user.last_seen).time"></span>
+											</div>
+										</template>
+										<template x-if="!user.last_seen || user.last_seen <= 0">
+											<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
+										</template>
+									</div>
+									
+									<div class="col-span-1 flex justify-center">
+										<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
+									</div>
+									
+									<div class="col-span-3 flex justify-center">
+										<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+											<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+											<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
+											<span class="text-cyan-400/50 font-black">|</span>
+											<span class="text-[13px] font-mono font-bold text-cyan-200 tracking-widest" x-text="limitText(user)"></span>
+										</div>
+									</div>
+									
+									<div class="col-span-2 flex justify-end">
+										<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+											<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+											<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
+											<span class="text-rose-400/50 font-black">|</span>
+											<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFa(user.expiry_unix, false).split('/').join(' / ')"></span>
+										</div>
+									</div>
+									
+								</button>
+								<div x-show="expanded" x-collapse class="px-6 pb-6">
+									<div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
+										<div class="h-full rounded-full" :class="isActive(user) ? 'bg-cyan-400' : 'bg-rose-500'" :style="'width:' + usagePercent(user) + '%'"></div>
+									</div>
+									<template x-if="user.comment">
+										<div class="surface-soft rounded-2xl p-4 text-sm mb-4">
+											<span class="text-slate-500 ml-2">یادداشت:</span>
+											<span class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></span>
+										</div>
+									</template>
+									<div class="flex items-center gap-3">
+										<button @click="prepareEditUser(user)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-4 py-2 text-sm font-black transition">✏️ ویرایش</button>
+										<a :href="'/sub/' + user.sub_token" target="_blank" class="rounded-2xl bg-blue-500/10 text-blue-300 hover:bg-blue-500 hover:text-white px-4 py-2 text-sm font-black transition">👁️ مشاهده</a>
+										<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500 hover:text-slate-950 px-4 py-2 text-sm font-black transition">🔗 کپی لینک</button>
+										<div class="flex-1"></div>
+										<form action="/admin/actions" method="POST" onsubmit="return confirm('ریست ترافیک؟')">
+											<input type="hidden" name="action" value="reset_traffic">
+											<input type="hidden" name="current_tab" value="users">
+											<input type="hidden" name="username" :value="user.username">
+											<button type="submit" class="rounded-2xl bg-orange-500/10 text-orange-300 hover:bg-orange-500 hover:text-white px-4 py-2 text-sm font-black transition">🔄 ریست</button>
+										</form>
+										<form action="/admin/actions" method="POST" onsubmit="return confirm('حذف کاربر؟')">
+											<input type="hidden" name="action" value="delete_user">
+											<input type="hidden" name="current_tab" value="users">
+											<input type="hidden" name="username" :value="user.username">
+											<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-4 py-2 text-sm font-black transition">🗑️ حذف</button>
+										</form>
+									</div>
+								</div>
+							</article>
+						</template>
+					</div>
+					<div class="bg-slate-950/70 border-t border-white/10 p-4 flex items-center justify-between">
 						<button @click="if(currentPage>1) currentPage--" class="rounded-2xl px-5 py-2 text-cyan-300 hover:bg-white/5 font-black">قبلی</button>
 						<span class="text-sm font-black" x-text="'صفحه ' + currentPage + ' از ' + totalPages"></span>
 						<button @click="if(currentPage<totalPages) currentPage++" class="rounded-2xl px-5 py-2 text-cyan-300 hover:bg-white/5 font-black">بعدی</button>
@@ -1118,53 +1115,49 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 				</div>
 			</section>
 			<section x-show="activeTab === 'nodes'" x-transition class="space-y-5">
-				<div class="surface rounded-3xl overflow-hidden flex flex-col">
-					<div class="w-full overflow-x-auto no-scrollbar">
-						<div class="min-w-[1250px]">
-							<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-								<div class="col-span-5">سرور نود</div>
-								<div class="col-span-2 text-center">وضعیت</div>
-								<div class="col-span-3 text-left">ترافیک کل</div>
-								<div class="col-span-2 text-left">آخرین پینگ</div>
-							</div>
-							<div class="divide-y divide-white/5">
-								<template x-for="(node, index) in nodes" :key="node.IP">
-									<article x-data="{ expanded:false }" class="transition hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-slate-800/40'">
-										<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
-											<div class="col-span-5 flex items-center gap-3 min-w-0">
-												<span class="text-2xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
-												<div class="min-w-0">
-													<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
-													<p class="font-mono text-xs text-slate-500 truncate" x-text="node.IP"></p>
-												</div>
-											</div>
-											<div class="col-span-2 text-center">
-												<span class="rounded-xl px-3 py-1 text-xs font-black" :class="node.IsOnline ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="node.IsOnline ? 'آنلاین' : 'آفلاین'"></span>
-											</div>
-											<div class="col-span-3 text-left font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
-											<div class="col-span-2 text-left text-xs text-slate-400" x-text="dateFaEn(node.LastSeen)"></div>
-										</button>
-										<div x-show="expanded" x-collapse class="px-6 pb-6 border-t border-white/5 pt-4">
-											<div class="surface-soft rounded-2xl p-4 grid grid-cols-2 gap-4 text-sm mb-4">
-												<div><span class="text-slate-500 ml-2">دامنه:</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
-												<div><span class="text-slate-500 ml-2">آی‌پی:</span><span class="font-mono" x-text="node.IP"></span></div>
-											</div>
-											<div class="flex gap-3">
-												<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 px-5 py-2 text-sm font-black transition">📊 نمودار</button>
-												<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-5 py-2 text-sm font-black transition">✏️ ویرایش</button>
-												<div class="flex-1"></div>
-												<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود حذف می‌شود ولی تاریخچه ترافیک آن باقی می‌ماند. حذف شود؟')">
-													<input type="hidden" name="action" value="delete_node">
-													<input type="hidden" name="current_tab" value="nodes">
-													<input type="hidden" name="ip" :value="node.IP">
-													<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-5 py-2 text-sm font-black transition">🗑️ حذف</button>
-												</form>
-											</div>
+				<div class="surface rounded-3xl overflow-hidden">
+					<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
+						<div class="col-span-5">سرور نود</div>
+						<div class="col-span-2 text-center">وضعیت</div>
+						<div class="col-span-3 text-left">ترافیک کل</div>
+						<div class="col-span-2 text-left">آخرین پینگ</div>
+					</div>
+					<div class="divide-y divide-white/10">
+						<template x-for="node in nodes" :key="node.IP">
+							<article x-data="{ expanded:false }" class="hover:bg-white/[.03] transition">
+								<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
+									<div class="col-span-5 flex items-center gap-3 min-w-0">
+										<span class="text-2xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
+										<div class="min-w-0">
+											<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
+											<p class="font-mono text-xs text-slate-500 truncate" x-text="node.IP"></p>
 										</div>
-									</article>
-								</template>
-							</div>
-						</div>
+									</div>
+									<div class="col-span-2 text-center">
+										<span class="rounded-xl px-3 py-1 text-xs font-black" :class="node.IsOnline ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="node.IsOnline ? 'آنلاین' : 'آفلاین'"></span>
+									</div>
+									<div class="col-span-3 text-left font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
+									<div class="col-span-2 text-left text-xs text-slate-400" x-text="dateFa(node.LastSeen, true)"></div>
+								</button>
+								<div x-show="expanded" x-collapse class="px-6 pb-6">
+									<div class="surface-soft rounded-2xl p-4 grid grid-cols-2 gap-4 text-sm mb-4">
+										<div><span class="text-slate-500 ml-2">دامنه:</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
+										<div><span class="text-slate-500 ml-2">آی‌پی:</span><span class="font-mono" x-text="node.IP"></span></div>
+									</div>
+									<div class="flex gap-3">
+										<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 px-5 py-2 text-sm font-black transition">📊 نمودار</button>
+										<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-5 py-2 text-sm font-black transition">✏️ ویرایش</button>
+										<div class="flex-1"></div>
+										<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')">
+											<input type="hidden" name="action" value="delete_node">
+											<input type="hidden" name="current_tab" value="nodes">
+											<input type="hidden" name="ip" :value="node.IP">
+											<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-5 py-2 text-sm font-black transition">🗑️ حذف</button>
+										</form>
+									</div>
+								</div>
+							</article>
+						</template>
 					</div>
 				</div>
 			</section>
@@ -1455,6 +1448,7 @@ func chartCoreScript() string {
 		document.addEventListener("webkitfullscreenchange", function() { setTimeout(fn, 250); });
 	}
 
+	// Toggle real fullscreen + force landscape (the only reliable way on mobile).
 	function svmGoLandscape(el) {
 		if (document.fullscreenElement || document.webkitFullscreenElement) {
 			if (document.exitFullscreen) { document.exitFullscreen(); return; }
@@ -1466,6 +1460,8 @@ func chartCoreScript() string {
 		else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); setTimeout(lock, 250); }
 	}
 
+	// Self-contained range dropdown. Owns its own scope; broadcasts the chosen
+	// range via "svm-range-change" so any chart component can react.
 	function svmRangeDropdown() {
 		var initialRange = "7d";
 		try { if(localStorage.getItem("svm_chart_range")) initialRange = localStorage.getItem("svm_chart_range"); } catch(e) {}
@@ -1486,6 +1482,9 @@ func chartCoreScript() string {
 		};
 	}
 
+	// Reusable Alpine chart component. The mount method is NOT named "init"
+	// (Alpine 3 auto-calls a method named init, which caused a double render);
+	// it is invoked explicitly via x-init="mount()".
 	function svmMakeChartComponent(raw, elId) {
 		var initialRange = "7d";
 		try { if(localStorage.getItem("svm_chart_range")) initialRange = localStorage.getItem("svm_chart_range"); } catch(e) {}
@@ -1529,36 +1528,75 @@ func chartCoreScript() string {
 func panelDataScript() string {
 	return chartCoreScript() + `
 <script>
-	function flashMessage(message) { window.dispatchEvent(new CustomEvent("toast", { detail: message || "انجام شد" })); }
+	function flashMessage(message) {
+		window.dispatchEvent(new CustomEvent("toast", { detail: message || "انجام شد" }));
+	}
 	function copyText(text) {
 		if (!text) return;
 		function fallbackCopy(value) {
 			var ta = document.createElement("textarea");
-			ta.value = value; ta.style.position = "fixed"; ta.style.opacity = "0";
-			document.body.appendChild(ta); ta.select();
-			try { document.execCommand("copy"); flashMessage("کپی شد"); } catch (e) { alert("امکان کپی خودکار وجود ندارد."); }
+			ta.value = value;
+			ta.style.position = "fixed";
+			ta.style.opacity = "0";
+			document.body.appendChild(ta);
+			ta.select();
+			try { document.execCommand("copy"); flashMessage("کپی شد"); }
+			catch (e) { alert("امکان کپی خودکار وجود ندارد."); }
 			ta.remove();
 		}
 		if (navigator.clipboard && window.isSecureContext) {
 			navigator.clipboard.writeText(text).then(function(){ flashMessage("کپی شد"); }).catch(function(){ fallbackCopy(text); });
-		} else { fallbackCopy(text); }
+		} else {
+			fallbackCopy(text);
+		}
 	}
 	function copySubLink(token) { copyText(window.location.origin + "/sub/" + token); }
-	function readStoredPerPage() { try { var v = parseInt(localStorage.getItem("svm_perpage") || "10", 10); if (v === 20 || v === 50 || v === 100) return v; } catch (e) {} return 10; }
+	function readStoredPerPage() {
+		try {
+			var v = parseInt(localStorage.getItem("svm_perpage") || "10", 10);
+			if (v === 20 || v === 50 || v === 100) return v;
+		} catch (e) {}
+		return 10;
+	}
 	function panelData() {
 		var initialRange = "7d";
 		try { if(localStorage.getItem("svm_chart_range")) initialRange = localStorage.getItem("svm_chart_range"); } catch(e) {}
 		return {
 			activeTab: window.SERVER_DATA.currentTab || "dashboard",
-			editUserModal: false, selectedUser: {}, drilldownModal: false, drilldownUrl: "",
-			newUsername: "", newPassword: "", editDays: 30, editVol: 0, editUdpgw: 7301, editComment: "",
-			onlineMap: window.SERVER_DATA.onlineMap || {}, allUsers: window.SERVER_DATA.allUsers || [], nodes: window.SERVER_DATA.nodes || [],
-			cpu: window.SERVER_DATA.cpu || 0, ram: window.SERVER_DATA.ram || 0,
+			editUserModal: false,
+			selectedUser: {},
+			drilldownModal: false,
+			drilldownUrl: "",
+			newUsername: "",
+			newPassword: "",
+			editDays: 30,
+			editVol: 0,
+			editUdpgw: 7301,
+			editComment: "",
+			onlineMap: window.SERVER_DATA.onlineMap || {},
+			allUsers: window.SERVER_DATA.allUsers || [],
+			nodes: window.SERVER_DATA.nodes || [],
+			cpu: window.SERVER_DATA.cpu || 0,
+			ram: window.SERVER_DATA.ram || 0,
 			stats: Object.assign({ totalUsers: 0, onlineUsers: 0, inactiveUsers: 0, totalNodes: 0, activeNodes: 0 }, window.SERVER_DATA.stats || {}),
-			toastMsg: window.SERVER_DATA.toastMsg || "", toastIsError: false, showToast: false, toastTimer: null,
-			refreshInterval: Number(localStorage.getItem("svm_refresh") || 20), timer: null,
-			userSearch: "", userFilter: "all", currentPage: 1, itemsPerPage: readStoredPerPage(), sortCol: "username", sortAsc: true,
-			chartRendered: false, chart: null, chartRange: initialRange, chartTotal: "0.00", chartTrendText: "روند: —", chartTrendUp: null,
+			toastMsg: window.SERVER_DATA.toastMsg || "",
+			toastIsError: false,
+			showToast: false,
+			toastTimer: null,
+			refreshInterval: Number(localStorage.getItem("svm_refresh") || 20),
+			timer: null,
+			userSearch: "",
+			userFilter: "all",
+			currentPage: 1,
+			itemsPerPage: readStoredPerPage(),
+			sortCol: "username",
+			sortAsc: true,
+			chartRendered: false,
+			chart: null,
+			chartRange: initialRange,
+			chartTotal: "0.00",
+			chartTrendText: "روند: —",
+			chartTrendUp: null,
 			chartRaw: { hourly: { categories: [], series: [] }, daily: { categories: [], series: [] } },
 
 			normalizeChartRaw: function(raw) {
@@ -1571,6 +1609,7 @@ func panelDataScript() string {
 				}
 				return { hourly: emptyPart, daily: emptyPart };
 			},
+
 			openFullChart: function() {
 				if (document.fullscreenElement || document.webkitFullscreenElement) {
 					if (document.exitFullscreen) { document.exitFullscreen(); return; }
@@ -1578,13 +1617,20 @@ func panelDataScript() string {
 				}
 				var el = document.getElementById("dashChartWrap");
 				function lock() { try { if (screen.orientation && screen.orientation.lock) { screen.orientation.lock("landscape").catch(function(){}); } } catch (e) {} }
-				if (el && el.requestFullscreen) { el.requestFullscreen().then(lock).catch(function(){ window.open("/admin/chart-full", "_blank"); }); } 
-				else if (el && el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); setTimeout(lock, 250); } 
-				else { window.open("/admin/chart-full", "_blank"); }
+				if (el && el.requestFullscreen) {
+					el.requestFullscreen().then(lock).catch(function(){ window.open("/admin/chart-full", "_blank"); });
+				} else if (el && el.webkitRequestFullscreen) {
+					el.webkitRequestFullscreen(); setTimeout(lock, 250);
+				} else {
+					window.open("/admin/chart-full", "_blank");
+				}
 			},
+
 			buildChartData: function() {
 				var r = svmBuildChart(this.chartRaw, this.chartRange);
-				this.chartTotal = r.total; this.chartTrendUp = r.trendUp; this.chartTrendText = r.trendText;
+				this.chartTotal = r.total;
+				this.chartTrendUp = r.trendUp;
+				this.chartTrendText = r.trendText;
 				return { categories: r.categories, series: r.series };
 			},
 			chartOptions: function(built) { return svmChartOptions(built); },
@@ -1592,17 +1638,30 @@ func panelDataScript() string {
 				var built = this.buildChartData();
 				if (this.chart) { this.chart.updateOptions(this.chartOptions(built), true, true); }
 			},
+
 			get sortedUsers() {
 				var self = this;
 				var list = Array.isArray(this.allUsers) ? this.allUsers.slice() : [];
-				if (this.userFilter === "online") { list = list.filter(function(u) { return self.isActive(u) && self.onlineMap && self.onlineMap[u.username]; }); } 
-				else if (this.userFilter === "inactive") { list = list.filter(function(u) { return !self.isActive(u); }); }
+				if (this.userFilter === "online") {
+					list = list.filter(function(u) { return self.isActive(u) && self.onlineMap && self.onlineMap[u.username]; });
+				} else if (this.userFilter === "inactive") {
+					list = list.filter(function(u) { return !self.isActive(u); });
+				}
 				var q = (this.userSearch || "").trim().toLowerCase();
-				if (q !== "") { list = list.filter(function(u) { return String(u.username || "").toLowerCase().indexOf(q) !== -1 || String(u.comment || "").toLowerCase().indexOf(q) !== -1; }); }
-				var dir = this.sortAsc ? 1 : -1; var col = this.sortCol;
+				if (q !== "") {
+					list = list.filter(function(u) {
+						return String(u.username || "").toLowerCase().indexOf(q) !== -1 ||
+							String(u.comment || "").toLowerCase().indexOf(q) !== -1;
+					});
+				}
+				var dir = this.sortAsc ? 1 : -1;
+				var col = this.sortCol;
 				list.sort(function(a, b) {
-					var av = self.sortValue(a, col); var bv = self.sortValue(b, col);
-					if (typeof av === "string" || typeof bv === "string") return String(av).localeCompare(String(bv)) * dir;
+					var av = self.sortValue(a, col);
+					var bv = self.sortValue(b, col);
+					if (typeof av === "string" || typeof bv === "string") {
+						return String(av).localeCompare(String(bv)) * dir;
+					}
 					return ((av || 0) - (bv || 0)) * dir;
 				});
 				return list;
@@ -1614,8 +1673,12 @@ func panelDataScript() string {
 				return (this.sortedUsers || []).slice(start, start + this.itemsPerPage);
 			},
 			notify: function(message, isError) {
-				var self = this; this.toastMsg = message || "انجام شد"; this.toastIsError = !!isError; this.showToast = true;
-				clearTimeout(this.toastTimer); this.toastTimer = setTimeout(function() { self.showToast = false; }, 2800);
+				var self = this;
+				this.toastMsg = message || "انجام شد";
+				this.toastIsError = !!isError;
+				this.showToast = true;
+				clearTimeout(this.toastTimer);
+				this.toastTimer = setTimeout(function() { self.showToast = false; }, 2800);
 			},
 			onPerPageChange: function() {
 				this.currentPage = 1;
@@ -1623,9 +1686,12 @@ func panelDataScript() string {
 			},
 			cleanToastFromURL: function() {
 				try {
-					var p = new URLSearchParams(window.location.search); var tab = p.get("tab"); var np = new URLSearchParams();
+					var p = new URLSearchParams(window.location.search);
+					var tab = p.get("tab");
+					var np = new URLSearchParams();
 					if (tab) np.set("tab", tab);
-					var s = np.toString(); window.history.replaceState(null, "", window.location.pathname + (s ? "?" + s : ""));
+					var s = np.toString();
+					window.history.replaceState(null, "", window.location.pathname + (s ? "?" + s : ""));
 				} catch (e) {}
 			},
 			sortValue: function(user, col) {
@@ -1637,10 +1703,14 @@ func panelDataScript() string {
 				return String(user.username || "").toLowerCase();
 			},
 			sortBy: function(col) {
-				if (this.sortCol === col) this.sortAsc = !this.sortAsc; else { this.sortCol = col; this.sortAsc = col === "username"; }
+				if (this.sortCol === col) this.sortAsc = !this.sortAsc;
+				else { this.sortCol = col; this.sortAsc = col === "username"; }
 				this.currentPage = 1;
 			},
-			sortIcon: function(col) { if (this.sortCol !== col) return ""; return this.sortAsc ? "↑" : "↓"; },
+			sortIcon: function(col) {
+				if (this.sortCol !== col) return "";
+				return this.sortAsc ? "↑" : "↓";
+			},
 			isActive: function(user) {
 				if (!user) return false;
 				var notExpired = Number(user.expiry_unix || 0) * 1000 > Date.now();
@@ -1657,7 +1727,9 @@ func panelDataScript() string {
 				return Math.max(0, Math.min(100, p));
 			},
 			formatBytes: function(bytes) {
-				bytes = Number(bytes || 0); var gb = 1024 * 1024 * 1024; var mb = 1024 * 1024;
+				bytes = Number(bytes || 0);
+				var gb = 1024 * 1024 * 1024;
+				var mb = 1024 * 1024;
 				if (bytes >= gb) return (bytes / gb).toFixed(2) + " GB";
 				return (bytes / mb).toFixed(1) + " MB";
 			},
@@ -1675,51 +1747,65 @@ func panelDataScript() string {
 				for(var i=0; i<10; i++) str = str.split(p[i]).join(i);
 				return str;
 			},
-			dateFaEn: function(unix) {
-				unix = Number(unix || 0);
-				if (unix <= 0) return "ندارد";
-				var d = new Date(unix * 1000);
-				var str = d.toLocaleDateString("fa-IR", { year: 'numeric', month: 'numeric', day: 'numeric' });
-				var p = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-				for(var i=0; i<10; i++) str = str.split(p[i]).join(i);
-				return str.split('/').join(' / ');
-			},
 			splitDateFa: function(unix) {
 				unix = Number(unix || 0);
 				if (unix <= 0) return { date: "بدون اتصال", time: "" };
 				var d = new Date(unix * 1000);
-				var faDate = d.toLocaleDateString("fa-IR", { year: 'numeric', month: 'numeric', day: 'numeric' });
-				var faTime = d.toLocaleTimeString("fa-IR", { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+				var optsDate = { year: 'numeric', month: 'numeric', day: 'numeric' };
+				var optsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+				var faDate = d.toLocaleDateString("fa-IR", optsDate);
+				var faTime = d.toLocaleTimeString("fa-IR", optsTime);
 				var p = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
 				for(var i=0; i<10; i++) {
 					faDate = faDate.split(p[i]).join(i);
 					faTime = faTime.split(p[i]).join(i);
 				}
-				return { date: faDate.split('/').join(' / '), time: faTime };
+				return { date: faDate, time: faTime };
 			},
 			randomUsername: function() { return "user_" + Math.floor(10000 + Math.random() * 90000); },
 			randomPassword: function() {
-				var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; var p = "";
+				var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+				var p = "";
 				for (var i = 0; i < 10; i++) p += chars.charAt(Math.floor(Math.random() * chars.length));
 				return p;
 			},
-			prepareCreateUser: function() { this.selectedUser = { mode: "create" }; this.newUsername = ""; this.newPassword = ""; this.editUserModal = true; },
+			prepareCreateUser: function() {
+				this.selectedUser = { mode: "create" };
+				this.newUsername = "";
+				this.newPassword = "";
+				this.editUserModal = true;
+			},
 			prepareEditUser: function(user) {
-				var u = Object.assign({}, user || {}); u.mode = "full_edit"; this.selectedUser = u; this.newPassword = u.password || "";
-				var d = this.daysLeft(u); this.editDays = d > 0 ? d : 0;
+				var u = Object.assign({}, user || {});
+				u.mode = "full_edit";
+				this.selectedUser = u;
+				this.newPassword = u.password || "";
+				var d = this.daysLeft(u);
+				this.editDays = d > 0 ? d : 0;
 				this.editVol = (Number(u.data_limit || 0) / (1024 * 1024 * 1024)).toFixed(2);
-				this.editUdpgw = u.udpgw || 7301; this.editComment = u.comment || ""; this.editUserModal = true;
+				this.editUdpgw = u.udpgw || 7301;
+				this.editComment = u.comment || "";
+				this.editUserModal = true;
 			},
 			prepareNodeEdit: function(node) {
-				var n = Object.assign({}, node || {}); n.mode = "node"; this.selectedUser = n; this.editUserModal = true;
+				var n = Object.assign({}, node || {});
+				n.mode = "node";
+				this.selectedUser = n;
+				this.editUserModal = true;
 			},
 			fetchLiveData: function() {
 				var self = this;
 				fetch("/admin/api/live-data", { cache: "no-store" })
-					.then(function(res) { if (!res.ok) throw new Error("live data failed"); return res.json(); })
+					.then(function(res) {
+						if (!res.ok) throw new Error("live data failed");
+						return res.json();
+					})
 					.then(function(data) {
-						self.cpu = Number(data.cpu || 0); self.ram = Number(data.ram || 0); self.allUsers = data.users || [];
-						self.nodes = data.nodes || []; self.onlineMap = data.onlineMap || {};
+						self.cpu = Number(data.cpu || 0);
+						self.ram = Number(data.ram || 0);
+						self.allUsers = data.users || [];
+						self.nodes = data.nodes || [];
+						self.onlineMap = data.onlineMap || {};
 						self.stats = Object.assign({ totalUsers: 0, onlineUsers: 0, inactiveUsers: 0, totalNodes: 0, activeNodes: 0 }, data.stats || {});
 						if (self.currentPage > self.totalPages) self.currentPage = self.totalPages;
 					})
@@ -1734,7 +1820,9 @@ func panelDataScript() string {
 						if (!el || !window.ApexCharts || self.chartRendered) return;
 						var built = self.buildChartData();
 						self.chart = new ApexCharts(el, self.chartOptions(built));
-						self.chart.render(); svmAttachResize(self.chart); self.chartRendered = true;
+						self.chart.render();
+						svmAttachResize(self.chart);
+						self.chartRendered = true;
 					}, 120);
 				});
 			},
@@ -1744,14 +1832,25 @@ func panelDataScript() string {
 				window.addEventListener("toast", function(e) { self.notify(e.detail || "انجام شد", false); });
 				window.addEventListener("svm-range-change", function(e){ self.chartRange = e.detail; self.onChartRangeChange(); });
 				this.fetchLiveData();
-				if (this.refreshInterval > 0) { this.timer = setInterval(function() { self.fetchLiveData(); }, this.refreshInterval * 1000); }
-				if (this.toastMsg !== "") { setTimeout(function() { self.notify(self.toastMsg, !!window.SERVER_DATA.initialToastIsError); self.cleanToastFromURL(); }, 150); }
+				if (this.refreshInterval > 0) {
+					this.timer = setInterval(function() { self.fetchLiveData(); }, this.refreshInterval * 1000);
+				}
+				if (this.toastMsg !== "") {
+					setTimeout(function() {
+						self.notify(self.toastMsg, !!window.SERVER_DATA.initialToastIsError);
+						self.cleanToastFromURL();
+					}, 150);
+				}
 				this.$watch("activeTab", function(val) {
 					if (val === "dashboard") self.renderDashboardChart();
 					var desired = "?tab=" + encodeURIComponent(val);
-					if (window.location.search !== desired) window.history.pushState(null, "", desired);
+					if (window.location.search !== desired) {
+						window.history.pushState(null, "", desired);
+					}
 				});
-				if (this.activeTab === "dashboard") { this.renderDashboardChart(); }
+				if (this.activeTab === "dashboard") {
+					this.renderDashboardChart();
+				}
 			}
 		};
 	}

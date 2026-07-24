@@ -694,528 +694,214 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 					<option value="100">100</option>
 				</select>
 			</div>
-			<div class="space-y-2">
-				<template x-for="(user, index) in paginatedUsers" :key="user.username">
-					<article x-data="{ expanded:false }" class="rounded-2xl overflow-hidden border border-white/10 transition" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.05]'">
-						<button @click="expanded=!expanded" class="w-full px-3 py-2.5 text-right">
-							<div class="flex items-center justify-between gap-2">
-								<div class="flex items-center gap-2.5 min-w-0">
-									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 shrink-0" :class="isActive(user) ? (onlineMap[user.username] ? 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,.7)]' : 'text-white/35') : 'text-rose-400 drop-shadow-[0_0_5px_rgba(251,113,133,.6)]'">
-										<path d="M1.5 8.6a18 18 0 0 1 21 0"></path>
-										<path d="M5 12.1a13 13 0 0 1 14 0"></path>
-										<path d="M8.5 15.6a8 8 0 0 1 7 0"></path>
-										<circle cx="12" cy="19.4" r="1.15" fill="currentColor" stroke="none"></circle>
-									</svg>
-									<div class="min-w-0">
-										<p class="font-black text-sm truncate" x-text="user.username"></p>
-										<p class="text-[10px] text-slate-400 mt-0.5" x-text="'🕒 ' + dateFa(user.last_seen, true)"></p>
-										<p class="text-[10px] text-slate-500 truncate mt-0.5" x-show="user.comment">💬 یادداشت دارد</p>
-									</div>
-								</div>
-								<div class="text-left shrink-0">
-									<p class="font-mono text-xs font-black" x-text="formatBytes(user.data_used || 0)"></p>
-									<p class="font-mono text-[10px] text-slate-500" x-text="limitText(user)"></p>
-								</div>
-							</div>
-							<div class="h-1 bg-slate-800 rounded-full overflow-hidden mt-2">
-								<div class="h-full rounded-full" :class="isActive(user) ? 'bg-cyan-400' : 'bg-rose-500'" :style="'width:' + usagePercent(user) + '%'"></div>
-							</div>
-						</button>
-						<div x-show="expanded" x-collapse class="px-3 pb-3">
-							<div class="surface-soft rounded-2xl p-3 text-xs space-y-2">
-								<div class="flex justify-between gap-2"><span class="text-slate-500">انقضا</span><span class="font-bold" x-text="dateFa(user.expiry_unix, false)"></span></div>
-								<div class="flex justify-between gap-2"><span class="text-slate-500">باقی‌مانده</span><span class="font-black" :class="daysLeft(user) > 3 ? 'text-emerald-300' : 'text-amber-300'" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'"></span></div>
-								<div class="flex justify-between gap-2"><span class="text-slate-500">آخرین اتصال</span><span class="font-bold" x-text="dateFa(user.last_seen, true)"></span></div>
-								<div x-show="user.comment" class="pt-2 border-t border-slate-700/60 mt-2">
-									<p class="text-slate-500 mb-1">یادداشت</p>
-									<p class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></p>
-								</div>
-							</div>
-							<div class="grid grid-cols-2 gap-2 mt-3">
-								<button @click="prepareEditUser(user)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 py-2 text-xs font-black">✏️ ویرایش</button>
-								<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 py-2 text-xs font-black">🔗 لینک</button>
-								<a :href="'/sub/' + user.sub_token" target="_blank" class="rounded-2xl bg-blue-500/10 text-blue-300 py-2 text-xs font-black text-center">👁️ مشاهده</a>
-								<form action="/admin/actions" method="POST" onsubmit="return confirm('ریست ترافیک؟')">
-									<input type="hidden" name="action" value="reset_traffic">
-									<input type="hidden" name="current_tab" value="users">
-									<input type="hidden" name="username" :value="user.username">
-									<button type="submit" class="w-full rounded-2xl bg-orange-500/10 text-orange-300 py-2 text-xs font-black">🔄 ریست</button>
-								</form>
-								<form action="/admin/actions" method="POST" onsubmit="return confirm('حذف کاربر؟')" class="col-span-2">
-									<input type="hidden" name="action" value="delete_user">
-									<input type="hidden" name="current_tab" value="users">
-									<input type="hidden" name="username" :value="user.username">
-									<button type="submit" class="w-full rounded-2xl bg-rose-500/10 text-rose-300 py-2 text-xs font-black">🗑️ حذف کاربر</button>
-								</form>
-							</div>
+			
+			<div class="surface rounded-3xl overflow-hidden flex flex-col">
+				<div class="w-full overflow-x-auto no-scrollbar">
+					<div class="min-w-[1100px]">
+						<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
+							<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
+							<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
+							<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
+							<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
+							<button @click="sortBy('expiry')" class="col-span-2 text-center hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
 						</div>
-					</article>
-				</template>
-			</div>
-			<div class="surface rounded-2xl p-2 flex items-center justify-between">
-				<button @click="if(currentPage>1) currentPage--" class="text-cyan-300 font-black px-4 py-2">قبلی</button>
-				<span class="text-xs font-black" x-text="currentPage + ' / ' + totalPages"></span>
-				<button @click="if(currentPage<totalPages) currentPage++" class="text-cyan-300 font-black px-4 py-2">بعدی</button>
+						<div class="divide-y divide-white/5">
+							<template x-for="(user, index) in paginatedUsers" :key="user.username">
+								<article x-data="{ expanded:false }" class="transition hover:bg-white/[.06]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.04]'">
+									<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
+										
+										<div class="col-span-3 flex items-center gap-3 min-w-0">
+											<span class="text-xl" x-text="isActive(user) ? (onlineMap[user.username] ? '🟢' : '⚪') : '🔴'"></span>
+											<div class="min-w-0">
+												<p class="font-black text-sm truncate text-slate-100" x-text="user.username"></p>
+												<p class="text-[10px] text-slate-400 mt-1 truncate" x-show="user.comment">💬 یادداشت دارد</p>
+											</div>
+										</div>
+										
+										<div class="col-span-3 flex justify-center">
+											<template x-if="user.last_seen > 0">
+												<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+													<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+													<span class="text-[13px] font-black text-slate-100 tracking-widest" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
+													<span class="text-indigo-400/50 font-black">|</span>
+													<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-widest" x-text="splitDateFa(user.last_seen).time"></span>
+												</div>
+											</template>
+											<template x-if="!user.last_seen || user.last_seen <= 0">
+												<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
+											</template>
+										</div>
+										
+										<div class="col-span-1 flex justify-center">
+											<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
+										</div>
+										
+										<div class="col-span-3 flex justify-center">
+											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+												<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+												<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
+												<span class="text-cyan-400/50 font-black">|</span>
+												<span class="text-[13px] font-mono font-bold text-cyan-200 tracking-widest" x-text="limitText(user)"></span>
+											</div>
+										</div>
+										
+										<div class="col-span-2 flex justify-center">
+											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+												<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+												<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
+												<span class="text-rose-400/50 font-black">|</span>
+												<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFa(user.expiry_unix, false).split('/').join(' / ')"></span>
+											</div>
+										</div>
+										
+									</button>
+									<div x-show="expanded" x-collapse class="px-6 pb-6">
+										<div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
+											<div class="h-full rounded-full" :class="isActive(user) ? 'bg-cyan-400' : 'bg-rose-500'" :style="'width:' + usagePercent(user) + '%'"></div>
+										</div>
+										<template x-if="user.comment">
+											<div class="surface-soft rounded-2xl p-4 text-sm mb-4">
+												<span class="text-slate-500 ml-2">یادداشت:</span>
+												<span class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></span>
+											</div>
+										</template>
+										<div class="flex items-center gap-3">
+											<button @click="prepareEditUser(user)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-4 py-2 text-sm font-black transition">✏️ ویرایش</button>
+											<a :href="'/sub/' + user.sub_token" target="_blank" class="rounded-2xl bg-blue-500/10 text-blue-300 hover:bg-blue-500 hover:text-white px-4 py-2 text-sm font-black transition">👁️ مشاهده</a>
+											<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500 hover:text-slate-950 px-4 py-2 text-sm font-black transition">🔗 کپی لینک</button>
+											<div class="flex-1"></div>
+											<form action="/admin/actions" method="POST" onsubmit="return confirm('ریست ترافیک؟')">
+												<input type="hidden" name="action" value="reset_traffic">
+												<input type="hidden" name="current_tab" value="users">
+												<input type="hidden" name="username" :value="user.username">
+												<button type="submit" class="rounded-2xl bg-orange-500/10 text-orange-300 hover:bg-orange-500 hover:text-white px-4 py-2 text-sm font-black transition">🔄 ریست</button>
+											</form>
+											<form action="/admin/actions" method="POST" onsubmit="return confirm('حذف کاربر؟')">
+												<input type="hidden" name="action" value="delete_user">
+												<input type="hidden" name="current_tab" value="users">
+												<input type="hidden" name="username" :value="user.username">
+												<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-4 py-2 text-sm font-black transition">🗑️ حذف</button>
+											</form>
+										</div>
+									</div>
+								</article>
+							</template>
+						</div>
+					</div>
+				</div>
+				<div class="bg-slate-950/70 border-t border-white/10 p-4 flex items-center justify-between shrink-0">
+					<button @click="if(currentPage>1) currentPage--" class="rounded-2xl px-5 py-2 text-cyan-300 hover:bg-white/5 font-black">قبلی</button>
+					<span class="text-sm font-black" x-text="'صفحه ' + currentPage + ' از ' + totalPages"></span>
+					<button @click="if(currentPage<totalPages) currentPage++" class="rounded-2xl px-5 py-2 text-cyan-300 hover:bg-white/5 font-black">بعدی</button>
+				</div>
 			</div>
 		</section>
 		<section x-show="activeTab === 'nodes'" x-transition class="space-y-3">
-			<template x-for="node in nodes" :key="node.IP">
-				<article x-data="{ expanded:false }" class="surface rounded-3xl overflow-hidden">
-					<button @click="expanded=!expanded" class="w-full p-4 text-right flex items-center justify-between gap-3">
-						<div class="flex items-center gap-3 min-w-0">
-							<span class="text-xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
-							<div class="min-w-0">
-								<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
-								<p class="font-mono text-[10px] text-slate-500 truncate" x-text="node.IP"></p>
-							</div>
+			<div class="surface rounded-3xl overflow-hidden flex flex-col">
+				<div class="w-full overflow-x-auto no-scrollbar">
+					<div class="min-w-[800px]">
+						<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
+							<div class="col-span-5">سرور نود</div>
+							<div class="col-span-2 text-center">وضعیت</div>
+							<div class="col-span-3 text-left">ترافیک کل</div>
+							<div class="col-span-2 text-left">آخرین پینگ</div>
 						</div>
-						<span class="font-mono text-xs font-black shrink-0" x-text="formatGB(node.TotalTraffic || 0)"></span>
-					</button>
-					<div x-show="expanded" x-collapse class="px-4 pb-4">
-						<div class="surface-soft rounded-2xl p-3 text-xs space-y-2 mb-3">
-							<div class="flex justify-between"><span class="text-slate-500">دامنه</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
-							<div class="flex justify-between"><span class="text-slate-500">آخرین پینگ</span><span x-text="dateFa(node.LastSeen, true)"></span></div>
+						<div class="divide-y divide-white/5">
+							<template x-for="(node, index) in nodes" :key="node.IP">
+								<article x-data="{ expanded:false }" class="transition hover:bg-white/[.06]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.04]'">
+									<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
+										<div class="col-span-5 flex items-center gap-3 min-w-0">
+											<span class="text-2xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
+											<div class="min-w-0">
+												<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
+												<p class="font-mono text-xs text-slate-500 truncate" x-text="node.IP"></p>
+											</div>
+										</div>
+										<div class="col-span-2 text-center">
+											<span class="rounded-xl px-3 py-1 text-xs font-black" :class="node.IsOnline ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="node.IsOnline ? 'آنلاین' : 'آفلاین'"></span>
+										</div>
+										<div class="col-span-3 text-left font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
+										<div class="col-span-2 text-left text-xs text-slate-400" x-text="dateFa(node.LastSeen, true)"></div>
+									</button>
+									<div x-show="expanded" x-collapse class="px-6 pb-6">
+										<div class="surface-soft rounded-2xl p-4 grid grid-cols-2 gap-4 text-sm mb-4">
+											<div><span class="text-slate-500 ml-2">دامنه:</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
+											<div><span class="text-slate-500 ml-2">آی‌پی:</span><span class="font-mono" x-text="node.IP"></span></div>
+										</div>
+										<div class="flex gap-3">
+											<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 px-5 py-2 text-sm font-black transition">📊 نمودار</button>
+											<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-5 py-2 text-sm font-black transition">✏️ ویرایش</button>
+											<div class="flex-1"></div>
+											<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')">
+												<input type="hidden" name="action" value="delete_node">
+												<input type="hidden" name="current_tab" value="nodes">
+												<input type="hidden" name="ip" :value="node.IP">
+												<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-5 py-2 text-sm font-black transition">🗑️ حذف</button>
+											</form>
+										</div>
+									</div>
+								</article>
+							</template>
 						</div>
-						<div class="grid grid-cols-2 gap-2">
-							<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 py-2 text-xs font-black">📊 نمودار</button>
-							<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 py-2 text-xs font-black">✏️ ویرایش</button>
-						</div>
-						<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')" class="mt-2">
-							<input type="hidden" name="action" value="delete_node">
-							<input type="hidden" name="current_tab" value="nodes">
-							<input type="hidden" name="ip" :value="node.IP">
-							<button type="submit" class="w-full rounded-2xl bg-rose-500/10 text-rose-300 py-2 text-xs font-black">🗑️ حذف نود</button>
-						</form>
 					</div>
-				</article>
-			</template>
+				</div>
+			</div>
 		</section>
-		<section x-show="activeTab === 'settings'" x-transition class="space-y-4">
-			<div class="surface rounded-3xl p-4">
-				<h3 class="font-black text-cyan-300 mb-3">توکن کلاستر</h3>
-				<input type="text" readonly value="{{.Token}}" dir="ltr" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-xs font-mono text-left outline-none mb-3">
-				<button type="button" data-token="{{.Token}}" onclick="copyText(this.dataset.token)" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">کپی توکن</button>
-			</div>
-			<form action="/admin/actions" method="POST" class="surface rounded-3xl p-4 space-y-3">
-				<input type="hidden" name="action" value="change_credentials">
-				<input type="hidden" name="current_tab" value="settings">
-				<h3 class="font-black text-amber-300">تغییر ورود پنل</h3>
-				<input type="text" name="admin_username" value="{{.AdminUser}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<input type="password" name="admin_password" placeholder="رمز جدید..." class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<button type="submit" class="w-full rounded-2xl bg-amber-500 text-slate-950 py-3 font-black">ذخیره</button>
-			</form>
-			<div class="surface rounded-3xl p-4 space-y-3">
-				<h3 class="font-black text-emerald-300">بکاپ دیتابیس</h3>
-				<a href="/admin/backup/download" class="block text-center rounded-2xl bg-emerald-500 text-slate-950 font-black py-3">دانلود بکاپ</a>
-				<form action="/admin/backup/restore" method="POST" enctype="multipart/form-data" class="space-y-3 pt-3 border-t border-white/10">
-					<input type="file" name="backup_file" accept=".sql" required class="text-xs text-slate-300 w-full">
-					<button type="submit" class="w-full rounded-2xl bg-orange-500 text-slate-950 font-black py-3">بازگردانی</button>
-				</form>
-			</div>
-			<form action="/admin/actions" method="POST" class="surface rounded-3xl p-4 space-y-3">
-				<input type="hidden" name="action" value="update_settings">
-				<input type="hidden" name="current_tab" value="settings">
-				<h3 class="font-black text-cyan-300">لینک‌ها و تلگرام</h3>
-				<input type="text" name="announcement_url" value="{{.AnnouncementURL}}" placeholder="لینک اطلاعیه" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<input type="text" name="tutorial_url" value="{{.TutorialURL}}" placeholder="لینک آموزش" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<input type="text" name="tg_bot_token" value="{{.TgBotToken}}" placeholder="توکن ربات" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<input type="text" name="tg_chat_id" value="{{.TgChatID}}" placeholder="Chat ID" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" placeholder="ساعت بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="رمز فایل زیپ بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات کلی</button>
-			</form>
-		</section>
-	</main>
-	<nav class="fixed bottom-0 left-0 right-0 z-50 h-[76px] pb-safe bg-slate-950/85 backdrop-blur-2xl border-t border-white/10 grid grid-cols-4">
-		<button @click="activeTab='dashboard'; window.scrollTo(0,0)" class="flex flex-col items-center justify-center gap-1 transition" :class="activeTab==='dashboard' ? 'text-cyan-300 scale-105' : 'text-slate-500'"><span class="text-xl">📊</span><span class="text-[10px] font-black">داشبورد</span></button>
-		<button @click="activeTab='users'; window.scrollTo(0,0)" class="flex flex-col items-center justify-center gap-1 transition" :class="activeTab==='users' ? 'text-cyan-300 scale-105' : 'text-slate-500'"><span class="text-xl">👥</span><span class="text-[10px] font-black">کاربران</span></button>
-		<button @click="activeTab='nodes'; window.scrollTo(0,0)" class="flex flex-col items-center justify-center gap-1 transition" :class="activeTab==='nodes' ? 'text-cyan-300 scale-105' : 'text-slate-500'"><span class="text-xl">🖥️</span><span class="text-[10px] font-black">نودها</span></button>
-		<button @click="activeTab='settings'; window.scrollTo(0,0)" class="flex flex-col items-center justify-center gap-1 transition" :class="activeTab==='settings' ? 'text-cyan-300 scale-105' : 'text-slate-500'"><span class="text-xl">⚙️</span><span class="text-[10px] font-black">تنظیمات</span></button>
-	</nav>
-	{{safeHTML .ModalHTML}}
-	{{safeHTML .PanelScript}}
-</body>
-</html>
-`, data)
-}
-
-func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, chartJSON, backupColor, backupText, logContent, token, adminUser string) string {
-	data := makeDashboardViewData(currentTab, toastMsg, toastIsError, chartJSON, backupColor, backupText, logContent, token, adminUser)
-	return renderTemplate("desktop-dashboard", `
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<title>داشبورد SVM</title>
-	<script src="https://cdn.tailwindcss.com"></script>
-	<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-	<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-	<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-	<style>
-		body { font-family:'Vazirmatn', sans-serif; background:#020617; }
-		[x-cloak] { display:none !important; }
-		::-webkit-scrollbar { width:7px; height:7px; }
-		::-webkit-scrollbar-track { background:#020617; }
-		::-webkit-scrollbar-thumb { background:#334155; border-radius:99px; }
-		input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
-		input[type=number] { -moz-appearance:textfield; }
-		.mesh {
-			background:
-				radial-gradient(circle at 10% 5%, rgba(34,211,238,.18), transparent 28%),
-				radial-gradient(circle at 88% 10%, rgba(167,139,250,.14), transparent 32%),
-				radial-gradient(circle at 50% 100%, rgba(52,211,153,.10), transparent 40%),
-				#020617;
-		}
-		.surface { background:rgba(15,23,42,.72); border:1px solid rgba(255,255,255,.08); backdrop-filter:blur(16px); box-shadow:0 20px 70px rgba(0,0,0,.25); }
-		.surface-soft { background:rgba(2,6,23,.45); border:1px solid rgba(148,163,184,.14); }
-		.nav-btn { width:100%; display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:18px; font-weight:900; transition:.2s; }
-		.apexcharts-tooltip { background:#0f172a !important; border:1px solid #334155 !important; color:#f8fafc !important; }
-		.apexcharts-tooltip-title { background:#111827 !important; border-bottom:1px solid #334155 !important; }
-		`+fullscreenCSS+`
-	</style>
-	<script>
-		window.SERVER_DATA = {
-			currentTab: "{{.CurrentTab}}",
-			toastMsg: "{{.ToastMsg}}",
-			initialToastIsError: {{.ToastIsError}},
-			chartData: {{safeJS .ChartJSON}},
-			cpu: 0, ram: 0, allUsers: [], nodes: [], onlineMap: {},
-			stats: { totalUsers: 0, onlineUsers: 0, inactiveUsers: 0, totalNodes: 0, activeNodes: 0 }
-		};
-	</script>
-</head>
-<body class="mesh text-slate-100 min-h-screen overflow-x-hidden" x-data="panelData()" x-init="initSetup()" @open-drilldown.window="drilldownUrl = $event.detail; drilldownModal = true">
-	<div x-show="showToast" x-cloak :class="toastIsError ? 'bg-rose-500 text-white shadow-rose-500/30' : 'bg-emerald-500 text-slate-950 shadow-emerald-500/20'" class="fixed bottom-6 left-6 z-[100] rounded-2xl px-6 py-4 font-black shadow-2xl" x-transition>
-		<span x-text="toastMsg"></span>
-	</div>
-	<aside class="fixed right-0 top-0 h-screen w-72 z-50 bg-slate-950/78 backdrop-blur-2xl border-l border-white/10 flex flex-col">
-		<div class="px-4 pt-5 pb-4 border-b border-white/10">
-			<div class="flex flex-col items-center gap-2">
-				<div class="w-full flex items-center justify-center">
-					<img src="/static/logo.png" alt="SVM PANEL" class="w-full h-auto max-h-40 object-contain mix-blend-screen" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-					<div class="w-full h-24 items-center justify-center" style="display:none"><span class="text-5xl">⚡</span></div>
-				</div>
-				<div class="text-center">
-					<h1 class="text-xl font-black bg-gradient-to-l from-cyan-300 to-emerald-300 bg-clip-text text-transparent">SVM PANEL</h1>
-					<p class="text-[11px] text-slate-500 mt-1">پنل مدیریت کاربران ssh vpn</p>
-				</div>
-			</div>
-		</div>
-		<nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-			<button @click="activeTab='dashboard'" class="nav-btn" :class="activeTab==='dashboard' ? 'bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'">📊 داشبورد اصلی</button>
-			<button @click="activeTab='users'" class="nav-btn" :class="activeTab==='users' ? 'bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'">👥 مدیریت کاربران</button>
-			<button @click="activeTab='nodes'" class="nav-btn" :class="activeTab==='nodes' ? 'bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'">🖥️ نودهای متصل</button>
-			<button @click="activeTab='settings'" class="nav-btn" :class="activeTab==='settings' ? 'bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'">⚙️ تنظیمات سیستم</button>
-		</nav>
-		<div class="p-4 border-t border-white/10">
-			<a href="/admin/logout" class="block text-center rounded-2xl bg-rose-500/10 border border-rose-400/20 text-rose-300 hover:bg-rose-500 hover:text-white transition py-3 font-black">🚪 خروج</a>
-		</div>
-	</aside>
-	<div class="pr-72 min-h-screen">
-		<header class="sticky top-0 z-40 bg-slate-950/60 backdrop-blur-2xl border-b border-white/10 px-8 py-4 flex items-center justify-between gap-5">
-			<div>
-				<h2 class="text-2xl font-black" x-text="activeTab === 'dashboard' ? 'داشبورد' : (activeTab === 'users' ? 'کاربران' : (activeTab === 'nodes' ? 'نودها' : 'تنظیمات'))"></h2>
-				<p class="text-xs text-slate-500 mt-1">پنل مدیریت مدرن SVM</p>
-			</div>
-			<div x-show="activeTab === 'users'" x-transition class="w-[420px]">
-				<input type="text" x-model="userSearch" @input="currentPage = 1" placeholder="🔍 جستجوی نام کاربری یا یادداشت..." class="w-full bg-slate-950/80 border border-slate-700 rounded-2xl px-4 py-3 text-sm outline-none focus:border-cyan-400 text-right">
-			</div>
-		</header>
-		<main class="p-8">
-			<section x-show="activeTab === 'dashboard'" x-transition class="space-y-6">
-				<div class="grid grid-cols-5 gap-5">
-					<div class="surface rounded-3xl p-5">
-						<p class="text-sm text-slate-400">پردازنده</p>
-						<div class="flex items-end justify-between mt-3"><span class="text-3xl font-black" x-text="cpu.toFixed(1) + '%'"></span><span class="text-2xl">🧠</span></div>
-						<div class="h-2 bg-slate-800 rounded-full mt-4 overflow-hidden"><div class="h-full bg-cyan-400" :style="'width:' + Math.min(cpu,100) + '%'"></div></div>
-					</div>
-					<div class="surface rounded-3xl p-5">
-						<p class="text-sm text-slate-400">رم</p>
-						<div class="flex items-end justify-between mt-3"><span class="text-3xl font-black" x-text="ram.toFixed(1) + '%'"></span><span class="text-2xl">💾</span></div>
-						<div class="h-2 bg-slate-800 rounded-full mt-4 overflow-hidden"><div class="h-full bg-violet-400" :style="'width:' + Math.min(ram,100) + '%'"></div></div>
-					</div>
-					<button @click="activeTab='users'; userFilter='all'; currentPage=1" class="surface rounded-3xl p-5 text-right hover:-translate-y-0.5 transition">
-						<p class="text-sm text-slate-400">کل کاربران</p>
-						<p class="text-3xl font-black text-cyan-300 mt-3" x-text="stats.totalUsers"></p>
-					</button>
-					<button @click="activeTab='users'; userFilter='online'; currentPage=1" class="surface rounded-3xl p-5 text-right hover:-translate-y-0.5 transition">
-						<p class="text-sm text-slate-400">آنلاین</p>
-						<p class="text-3xl font-black text-emerald-300 mt-3" x-text="stats.onlineUsers"></p>
-					</button>
-					<button @click="activeTab='users'; userFilter='inactive'; currentPage=1" class="surface rounded-3xl p-5 text-right hover:-translate-y-0.5 transition">
-						<p class="text-sm text-slate-400">غیرفعال</p>
-						<p class="text-3xl font-black text-rose-300 mt-3" x-text="stats.inactiveUsers"></p>
-					</button>
-				</div>
-				<div class="surface rounded-3xl p-5">
-					<div class="flex items-center justify-between mb-4">
-						<div>
-							<h3 class="text-xl font-black">🖥️ نودهای متصل</h3>
-							<p class="text-xs text-slate-500 mt-1">وضعیت لحظه‌ای سرورها</p>
-						</div>
-						<span class="rounded-full bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 text-xs font-black px-4 py-2" x-text="stats.activeNodes + '/' + stats.totalNodes + ' فعال'"></span>
-					</div>
-					<div class="flex flex-wrap gap-2">
-						<template x-for="node in nodes" :key="node.IP">
-							<div class="surface-soft rounded-2xl px-4 py-2 flex items-center gap-2">
-								<span class="w-2.5 h-2.5 rounded-full" :class="node.IsOnline ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,.7)]' : 'bg-rose-500'"></span>
-								<span class="text-xs font-black" x-text="node.CustomRemark || node.IP"></span>
-							</div>
-						</template>
-					</div>
-				</div>
-				<div class="surface rounded-3xl p-5 flex items-center justify-between">
-					<div class="flex items-center gap-3">
-						<div class="w-12 h-12 rounded-2xl bg-cyan-400/10 border border-cyan-300/20 flex items-center justify-center">🤖</div>
-						<div>
-							<p class="font-black">وضعیت اتوبکاپ ربات تلگرام</p>
-							<p class="text-xs text-slate-500 mt-1">پشتیبان‌گیری خودکار دیتابیس</p>
-						</div>
-					</div>
-					<span class="rounded-full border px-4 py-2 text-xs font-black {{.BackupColor}}">{{.BackupText}}</span>
-				</div>
-				<div id="dashChartWrap" class="surface rounded-3xl p-6">
-					<div class="fs-head flex items-start justify-between mb-4 gap-4 relative z-30">
-						<div class="min-w-0">
-							<h3 class="text-xl font-black">📊 نمودار مصرف ترافیک کلاستر</h3>
-							<p class="text-xs text-slate-500 mt-2">مجموع ترافیک همهٔ سرورها در بازهٔ انتخابی</p>
-						</div>
-						<div class="flex items-center gap-2 shrink-0">
-							{{safeHTML .RangeDropdown}}
-							{{safeHTML .FullscreenBtn}}
-						</div>
-					</div>
-					<div class="fs-chart h-[400px] relative z-0"><div id="dashboardChart" class="w-full h-full"></div></div>
-					<div class="fs-foot mt-4 pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
-						<p class="text-sm font-black" :class="chartTrendUp === null ? 'text-slate-400' : (chartTrendUp ? 'text-emerald-400' : 'text-rose-400')">
-							<span x-text="chartTrendText"></span>
-						</p>
-						<p class="text-xs text-slate-400">مصرف در این بازه: <span class="text-slate-100 font-black" x-text="chartTotal + ' GB'"></span> &nbsp;•&nbsp; مجموع ترافیک همهٔ سرورها</p>
+		<section x-show="activeTab === 'settings'" x-transition class="space-y-6">
+			<div class="grid grid-cols-2 gap-6">
+				<div class="surface rounded-3xl p-6">
+					<h3 class="text-xl font-black text-cyan-300 mb-4">توکن کلاستر</h3>
+					<div class="flex gap-3">
+						<input type="text" readonly value="{{.Token}}" dir="ltr" class="flex-1 bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 font-mono text-left outline-none">
+						<button type="button" data-token="{{.Token}}" onclick="copyText(this.dataset.token)" class="rounded-2xl bg-cyan-500 text-slate-950 px-6 font-black">کپی</button>
 					</div>
 				</div>
 				<div class="surface rounded-3xl p-6">
-					<h3 class="text-xl font-black mb-4">📜 لاگ‌های سیستم</h3>
-					<pre class="bg-slate-950/70 border border-slate-800 text-xs text-slate-300 p-4 rounded-2xl max-h-96 overflow-y-auto whitespace-pre-wrap break-words font-mono text-left" dir="ltr">{{.LogContent}}</pre>
-				</div>
-			</section>
-			<section x-show="activeTab === 'users'" x-transition class="space-y-5">
-				<div class="surface rounded-3xl p-3 flex items-center justify-between gap-4">
-					<div class="flex gap-2">
-						<button @click="userFilter='all'; currentPage=1" :class="userFilter==='all' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'" class="rounded-2xl px-5 py-2 text-sm font-black">همه</button>
-						<button @click="userFilter='online'; currentPage=1" :class="userFilter==='online' ? 'bg-emerald-500/15 text-emerald-300' : 'text-slate-400 hover:text-emerald-300'" class="rounded-2xl px-5 py-2 text-sm font-black">آنلاین</button>
-						<button @click="userFilter='inactive'; currentPage=1" :class="userFilter==='inactive' ? 'bg-rose-500/15 text-rose-300' : 'text-slate-400 hover:text-rose-300'" class="rounded-2xl px-5 py-2 text-sm font-black">غیرفعال</button>
-					</div>
-					<div class="flex items-center gap-3">
-						<select x-model.number="itemsPerPage" @change="onPerPageChange()" class="bg-slate-950/80 border border-slate-700 rounded-2xl px-3 py-2 text-sm outline-none">
-							<option value="10">10</option>
-							<option value="20">20</option>
-							<option value="50">50</option>
-							<option value="100">100</option>
-						</select>
-						<button @click="prepareCreateUser()" class="rounded-2xl bg-gradient-to-l from-cyan-500 to-emerald-500 text-slate-950 px-6 py-2.5 font-black shadow-lg shadow-cyan-500/15">+ کاربر جدید</button>
+					<h3 class="text-xl font-black text-emerald-300 mb-4">بکاپ لوکال</h3>
+					<div class="flex items-center gap-4">
+						<a href="/admin/backup/download" class="flex-1 text-center rounded-2xl bg-emerald-500 text-slate-950 font-black py-3">دانلود</a>
+						<form action="/admin/backup/restore" method="POST" enctype="multipart/form-data" class="flex-1 flex items-center gap-3">
+							<input type="file" name="backup_file" accept=".sql" required class="text-xs text-slate-300 w-full">
+							<button type="submit" class="rounded-2xl bg-orange-500 text-slate-950 font-black px-5 py-3">اجرا</button>
+						</form>
 					</div>
 				</div>
-				<div class="surface rounded-3xl overflow-hidden">
-					<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-						<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
-						<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
-						<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
-						<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
-						<button @click="sortBy('expiry')" class="col-span-2 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
+			</div>
+			<form action="/admin/actions" method="POST" class="surface rounded-3xl p-6">
+				<input type="hidden" name="action" value="change_credentials">
+				<input type="hidden" name="current_tab" value="settings">
+				<h3 class="text-xl font-black text-amber-300 mb-4">تغییر رمز ورود</h3>
+				<div class="grid grid-cols-3 gap-4 items-end">
+					<div>
+						<label class="block text-sm mb-2 text-slate-400">نام کاربری</label>
+						<input type="text" name="admin_username" value="{{.AdminUser}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none">
 					</div>
-					<div class="divide-y divide-white/10">
-						<template x-for="(user, index) in paginatedUsers" :key="user.username">
-							<article x-data="{ expanded:false }" class="transition border-b border-white/5 hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.05]'">
-								<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
-									
-									<div class="col-span-3 flex items-center gap-3 min-w-0">
-										<span class="text-xl" x-text="isActive(user) ? (onlineMap[user.username] ? '🟢' : '⚪') : '🔴'"></span>
-										<div class="min-w-0">
-											<p class="font-black text-sm truncate text-slate-100" x-text="user.username"></p>
-											<p class="text-[10px] text-slate-400 mt-1 truncate" x-show="user.comment">💬 یادداشت دارد</p>
-										</div>
-									</div>
-									
-									<div class="col-span-3 flex justify-center">
-										<template x-if="user.last_seen > 0">
-											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-												<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-												<span class="text-[13px] font-black text-slate-100 tracking-widest" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
-												<span class="text-indigo-400/50 font-black">|</span>
-												<span class="text-[13px] font-mono font-bold text-indigo-200 tracking-widest" x-text="splitDateFa(user.last_seen).time"></span>
-											</div>
-										</template>
-										<template x-if="!user.last_seen || user.last_seen <= 0">
-											<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
-										</template>
-									</div>
-									
-									<div class="col-span-1 flex justify-center">
-										<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
-									</div>
-									
-									<div class="col-span-3 flex justify-center">
-										<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-											<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-											<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
-											<span class="text-cyan-400/50 font-black">|</span>
-											<span class="text-[13px] font-mono font-bold text-cyan-200 tracking-widest" x-text="limitText(user)"></span>
-										</div>
-									</div>
-									
-									<div class="col-span-2 flex justify-end">
-										<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
-											<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-											<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
-											<span class="text-rose-400/50 font-black">|</span>
-											<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFa(user.expiry_unix, false).split('/').join(' / ')"></span>
-										</div>
-									</div>
-									
-								</button>
-								<div x-show="expanded" x-collapse class="px-6 pb-6">
-									<div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">
-										<div class="h-full rounded-full" :class="isActive(user) ? 'bg-cyan-400' : 'bg-rose-500'" :style="'width:' + usagePercent(user) + '%'"></div>
-									</div>
-									<template x-if="user.comment">
-										<div class="surface-soft rounded-2xl p-4 text-sm mb-4">
-											<span class="text-slate-500 ml-2">یادداشت:</span>
-											<span class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></span>
-										</div>
-									</template>
-									<div class="flex items-center gap-3">
-										<button @click="prepareEditUser(user)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-4 py-2 text-sm font-black transition">✏️ ویرایش</button>
-										<a :href="'/sub/' + user.sub_token" target="_blank" class="rounded-2xl bg-blue-500/10 text-blue-300 hover:bg-blue-500 hover:text-white px-4 py-2 text-sm font-black transition">👁️ مشاهده</a>
-										<button @click="copySubLink(user.sub_token)" class="rounded-2xl bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500 hover:text-slate-950 px-4 py-2 text-sm font-black transition">🔗 کپی لینک</button>
-										<div class="flex-1"></div>
-										<form action="/admin/actions" method="POST" onsubmit="return confirm('ریست ترافیک؟')">
-											<input type="hidden" name="action" value="reset_traffic">
-											<input type="hidden" name="current_tab" value="users">
-											<input type="hidden" name="username" :value="user.username">
-											<button type="submit" class="rounded-2xl bg-orange-500/10 text-orange-300 hover:bg-orange-500 hover:text-white px-4 py-2 text-sm font-black transition">🔄 ریست</button>
-										</form>
-										<form action="/admin/actions" method="POST" onsubmit="return confirm('حذف کاربر؟')">
-											<input type="hidden" name="action" value="delete_user">
-											<input type="hidden" name="current_tab" value="users">
-											<input type="hidden" name="username" :value="user.username">
-											<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-4 py-2 text-sm font-black transition">🗑️ حذف</button>
-										</form>
-									</div>
-								</div>
-							</article>
-						</template>
+					<div>
+						<label class="block text-sm mb-2 text-slate-400">رمز جدید</label>
+						<input type="password" name="admin_password" placeholder="در صورت نیاز..." class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none">
 					</div>
-					<div class="bg-slate-950/70 border-t border-white/10 p-4 flex items-center justify-between">
-						<button @click="if(currentPage>1) currentPage--" class="rounded-2xl px-5 py-2 text-cyan-300 hover:bg-white/5 font-black">قبلی</button>
-						<span class="text-sm font-black" x-text="'صفحه ' + currentPage + ' از ' + totalPages"></span>
-						<button @click="if(currentPage<totalPages) currentPage++" class="rounded-2xl px-5 py-2 text-cyan-300 hover:bg-white/5 font-black">بعدی</button>
-					</div>
+					<button type="submit" class="rounded-2xl bg-amber-500 text-slate-950 font-black py-3">ذخیره رمز</button>
 				</div>
-			</section>
-			<section x-show="activeTab === 'nodes'" x-transition class="space-y-5">
-				<div class="surface rounded-3xl overflow-hidden">
-					<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-						<div class="col-span-5">سرور نود</div>
-						<div class="col-span-2 text-center">وضعیت</div>
-						<div class="col-span-3 text-left">ترافیک کل</div>
-						<div class="col-span-2 text-left">آخرین پینگ</div>
-					</div>
-					<div class="divide-y divide-white/10">
-						<template x-for="node in nodes" :key="node.IP">
-							<article x-data="{ expanded:false }" class="hover:bg-white/[.03] transition">
-								<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
-									<div class="col-span-5 flex items-center gap-3 min-w-0">
-										<span class="text-2xl" x-text="node.IsOnline ? '🟢' : '🔴'"></span>
-										<div class="min-w-0">
-											<p class="font-black truncate" x-text="node.CustomRemark || node.IP"></p>
-											<p class="font-mono text-xs text-slate-500 truncate" x-text="node.IP"></p>
-										</div>
-									</div>
-									<div class="col-span-2 text-center">
-										<span class="rounded-xl px-3 py-1 text-xs font-black" :class="node.IsOnline ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="node.IsOnline ? 'آنلاین' : 'آفلاین'"></span>
-									</div>
-									<div class="col-span-3 text-left font-mono font-black" x-text="formatGB(node.TotalTraffic || 0)"></div>
-									<div class="col-span-2 text-left text-xs text-slate-400" x-text="dateFa(node.LastSeen, true)"></div>
-								</button>
-								<div x-show="expanded" x-collapse class="px-6 pb-6">
-									<div class="surface-soft rounded-2xl p-4 grid grid-cols-2 gap-4 text-sm mb-4">
-										<div><span class="text-slate-500 ml-2">دامنه:</span><span class="font-mono" x-text="node.Domain || 'ندارد'"></span></div>
-										<div><span class="text-slate-500 ml-2">آی‌پی:</span><span class="font-mono" x-text="node.IP"></span></div>
-									</div>
-									<div class="flex gap-3">
-										<button @click="window.dispatchEvent(new CustomEvent('open-drilldown', { detail: '/admin/node-chart?ip=' + node.IP }))" class="rounded-2xl bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 px-5 py-2 text-sm font-black transition">📊 نمودار</button>
-										<button @click="prepareNodeEdit(node)" class="rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500 hover:text-white px-5 py-2 text-sm font-black transition">✏️ ویرایش</button>
-										<div class="flex-1"></div>
-										<form action="/admin/actions" method="POST" onsubmit="return confirm('این نود از لیست حذف می‌شود ولی تاریخچه ترافیک ثبت‌شده‌ی آن دست‌نخورده باقی می‌ماند. حذف شود؟')">
-											<input type="hidden" name="action" value="delete_node">
-											<input type="hidden" name="current_tab" value="nodes">
-											<input type="hidden" name="ip" :value="node.IP">
-											<button type="submit" class="rounded-2xl bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white px-5 py-2 text-sm font-black transition">🗑️ حذف</button>
-										</form>
-									</div>
-								</div>
-							</article>
-						</template>
-					</div>
+			</form>
+			<form action="/admin/actions" method="POST" class="surface rounded-3xl p-6">
+				<input type="hidden" name="action" value="update_settings">
+				<input type="hidden" name="current_tab" value="settings">
+				<h3 class="text-xl font-black text-cyan-300 mb-4">لینک‌ها و تلگرام</h3>
+				<div class="grid grid-cols-2 gap-4">
+					<div><label class="block text-sm mb-2 text-slate-400">لینک اطلاعیه</label><input type="text" name="announcement_url" value="{{.AnnouncementURL}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+					<div><label class="block text-sm mb-2 text-slate-400">لینک آموزش</label><input type="text" name="tutorial_url" value="{{.TutorialURL}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+					<div><label class="block text-sm mb-2 text-slate-400">توکن ربات</label><input type="text" name="tg_bot_token" value="{{.TgBotToken}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+					<div><label class="block text-sm mb-2 text-slate-400">Chat ID</label><input type="text" name="tg_chat_id" value="{{.TgChatID}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+					<div><label class="block text-sm mb-2 text-slate-400">ساعت بکاپ</label><input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+					<div><label class="block text-sm mb-2 text-slate-400">رمز فایل زیپ بکاپ</label><input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="در صورت خالی بودن رمز نمیخورد" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
 				</div>
-			</section>
-			<section x-show="activeTab === 'settings'" x-transition class="space-y-6">
-				<div class="grid grid-cols-2 gap-6">
-					<div class="surface rounded-3xl p-6">
-						<h3 class="text-xl font-black text-cyan-300 mb-4">توکن کلاستر</h3>
-						<div class="flex gap-3">
-							<input type="text" readonly value="{{.Token}}" dir="ltr" class="flex-1 bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 font-mono text-left outline-none">
-							<button type="button" data-token="{{.Token}}" onclick="copyText(this.dataset.token)" class="rounded-2xl bg-cyan-500 text-slate-950 px-6 font-black">کپی</button>
-						</div>
-					</div>
-					<div class="surface rounded-3xl p-6">
-						<h3 class="text-xl font-black text-emerald-300 mb-4">بکاپ لوکال</h3>
-						<div class="flex items-center gap-4">
-							<a href="/admin/backup/download" class="flex-1 text-center rounded-2xl bg-emerald-500 text-slate-950 font-black py-3">دانلود</a>
-							<form action="/admin/backup/restore" method="POST" enctype="multipart/form-data" class="flex-1 flex items-center gap-3">
-								<input type="file" name="backup_file" accept=".sql" required class="text-xs text-slate-300 w-full">
-								<button type="submit" class="rounded-2xl bg-orange-500 text-slate-950 font-black px-5 py-3">اجرا</button>
-							</form>
-						</div>
-					</div>
-				</div>
-				<form action="/admin/actions" method="POST" class="surface rounded-3xl p-6">
-					<input type="hidden" name="action" value="change_credentials">
-					<input type="hidden" name="current_tab" value="settings">
-					<h3 class="text-xl font-black text-amber-300 mb-4">تغییر رمز ورود</h3>
-					<div class="grid grid-cols-3 gap-4 items-end">
-						<div>
-							<label class="block text-sm mb-2 text-slate-400">نام کاربری</label>
-							<input type="text" name="admin_username" value="{{.AdminUser}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none">
-						</div>
-						<div>
-							<label class="block text-sm mb-2 text-slate-400">رمز جدید</label>
-							<input type="password" name="admin_password" placeholder="در صورت نیاز..." class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none">
-						</div>
-						<button type="submit" class="rounded-2xl bg-amber-500 text-slate-950 font-black py-3">ذخیره رمز</button>
-					</div>
-				</form>
-				<form action="/admin/actions" method="POST" class="surface rounded-3xl p-6">
-					<input type="hidden" name="action" value="update_settings">
-					<input type="hidden" name="current_tab" value="settings">
-					<h3 class="text-xl font-black text-cyan-300 mb-4">لینک‌ها و تلگرام</h3>
-					<div class="grid grid-cols-2 gap-4">
-						<div><label class="block text-sm mb-2 text-slate-400">لینک اطلاعیه</label><input type="text" name="announcement_url" value="{{.AnnouncementURL}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
-						<div><label class="block text-sm mb-2 text-slate-400">لینک آموزش</label><input type="text" name="tutorial_url" value="{{.TutorialURL}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
-						<div><label class="block text-sm mb-2 text-slate-400">توکن ربات</label><input type="text" name="tg_bot_token" value="{{.TgBotToken}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
-						<div><label class="block text-sm mb-2 text-slate-400">Chat ID</label><input type="text" name="tg_chat_id" value="{{.TgChatID}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
-						<div><label class="block text-sm mb-2 text-slate-400">ساعت بکاپ</label><input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
-						<div><label class="block text-sm mb-2 text-slate-400">رمز فایل زیپ بکاپ</label><input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="در صورت خالی بودن رمز نمیخورد" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
-					</div>
-					<button type="submit" class="mt-6 rounded-2xl bg-cyan-500 text-slate-950 font-black py-3 px-8">ذخیره تنظیمات کلی</button>
-				</form>
-			</section>
-		</main>
-	</div>
-	{{safeHTML .ModalHTML}}
-	{{safeHTML .PanelScript}}
+				<button type="submit" class="mt-6 rounded-2xl bg-cyan-500 text-slate-950 font-black py-3 px-8">ذخیره تنظیمات کلی</button>
+			</form>
+		</section>
+	</main>
+</div>
+{{safeHTML .ModalHTML}}
+{{safeHTML .PanelScript}}
 </body>
 </html>
 `, data)

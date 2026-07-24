@@ -711,6 +711,23 @@ func GetNodes() ([]Node, error) {
 	return nodes, nil
 }
 
+// DeleteNode removes a node from the panel's node list ("nodes" table) only.
+// It intentionally does NOT touch node_traffic_logs or traffic_logs: neither
+// table has a foreign key back to nodes.ip, so deleting the node's row here
+// can never cascade and wipe out historical traffic data. Per-user usage
+// totals (users.data_used) and panel-wide stats are computed independently
+// of whether the node still exists, so they are unaffected as well.
+//
+// Note: if the same IP later calls the node API again (heartbeat/usage
+// report), it will simply be re-inserted with a fresh total_traffic counter
+// starting from 0 - the detailed history in node_traffic_logs is untouched
+// and keeps accumulating under that IP, so GetNodeTrafficStats/GetNodeChartData
+// still report the full historical figures even across a delete+reappear.
+func DeleteNode(ip string) error {
+	_, err := DB.Exec("DELETE FROM nodes WHERE ip = ?", ip)
+	return err
+}
+
 func GetNodeChartData(ip string) []float64 {
 	now := time.Now().In(models.IranTime)
 

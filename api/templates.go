@@ -1023,9 +1023,9 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 						<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
 						<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
 						<div class="col-span-3 flex items-center justify-center gap-3">
-							<button @click="sortBy('data_used')" class="hover:text-cyan-300 transition flex items-center gap-1">مصرف <span x-text="sortIcon('data_used')"></span></button>
-							<span class="text-white/10">|</span>
 							<button @click="sortBy('data_limit')" class="hover:text-cyan-300 transition flex items-center gap-1">حجم کل <span x-text="sortIcon('data_limit')"></span></button>
+							<span class="text-white/10">|</span>
+							<button @click="sortBy('data_used')" class="hover:text-cyan-300 transition flex items-center gap-1">مصرف <span x-text="sortIcon('data_used')"></span></button>
 						</div>
 						<button @click="sortBy('expiry')" class="col-span-3 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
 					</div>
@@ -1660,9 +1660,7 @@ func panelDataScript() string {
 				}
 				
 				var col = this.sortCol;
-				if (!col) {
-					list.reverse();
-				} else {
+				if (col) {
 					var dir = this.sortAsc ? 1 : -1;
 					list.sort(function(a, b) {
 						var av = self.sortValue(a, col);

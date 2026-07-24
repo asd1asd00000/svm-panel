@@ -696,7 +696,7 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 			</div>
 			<div class="space-y-2">
 				<template x-for="(user, index) in paginatedUsers" :key="user.username">
-					<article x-data="{ expanded:false }" class="rounded-2xl overflow-hidden border border-white/10" :style="index % 2 === 0 ? 'background:rgba(255,255,255,0)' : 'background:rgba(255,255,255,0.03)'">
+					<article x-data="{ expanded:false }" class="rounded-2xl overflow-hidden border border-white/10 transition" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.05]'">
 						<button @click="expanded=!expanded" class="w-full px-3 py-2.5 text-right">
 							<div class="flex items-center justify-between gap-2">
 								<div class="flex items-center gap-2.5 min-w-0">
@@ -725,6 +725,7 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 							<div class="surface-soft rounded-2xl p-3 text-xs space-y-2">
 								<div class="flex justify-between gap-2"><span class="text-slate-500">انقضا</span><span class="font-bold" x-text="dateFa(user.expiry_unix, false)"></span></div>
 								<div class="flex justify-between gap-2"><span class="text-slate-500">باقی‌مانده</span><span class="font-black" :class="daysLeft(user) > 3 ? 'text-emerald-300' : 'text-amber-300'" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'"></span></div>
+								<div class="flex justify-between gap-2"><span class="text-slate-500">آخرین اتصال</span><span class="font-bold" x-text="dateFa(user.last_seen, true)"></span></div>
 								<div x-show="user.comment" class="pt-2 border-t border-slate-700/60 mt-2">
 									<p class="text-slate-500 mb-1">یادداشت</p>
 									<p class="font-bold whitespace-pre-wrap leading-relaxed" x-text="user.comment"></p>
@@ -821,7 +822,7 @@ func renderMobileDashboard(currentTab, toastMsg string, toastIsError bool, chart
 				<input type="text" name="tg_chat_id" value="{{.TgChatID}}" placeholder="Chat ID" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<input type="number" name="auto_backup_hours" value="{{.AutoBackupHours}}" placeholder="ساعت بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
 				<input type="text" name="zip_password" value="{{.ZipPassword}}" placeholder="رمز فایل زیپ بکاپ" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-3 py-3 text-sm outline-none">
-				<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات</button>
+				<button type="submit" class="w-full rounded-2xl bg-cyan-500 text-slate-950 py-3 font-black">ذخیره تنظیمات کلی</button>
 			</form>
 		</section>
 	</main>
@@ -1018,26 +1019,28 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 				</div>
 				<div class="surface rounded-3xl overflow-hidden">
 					<div class="grid grid-cols-12 gap-3 px-6 py-4 bg-slate-950/70 border-b border-white/10 text-xs font-black text-slate-400">
-						<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300">نام کاربری <span x-text="sortIcon('username')"></span></button>
-						<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
-						<button @click="sortBy('status')" class="col-span-2 text-center hover:text-cyan-300">وضعیت <span x-text="sortIcon('status')"></span></button>
-						<button @click="sortBy('data_used')" class="col-span-2 text-left hover:text-cyan-300">مصرف <span x-text="sortIcon('data_used')"></span></button>
-						<button @click="sortBy('expiry')" class="col-span-2 text-left hover:text-cyan-300">انقضا <span x-text="sortIcon('expiry')"></span></button>
+						<button @click="sortBy('username')" class="col-span-3 text-right hover:text-cyan-300 transition">نام کاربری <span x-text="sortIcon('username')"></span></button>
+						<button @click="sortBy('last_seen')" class="col-span-3 text-center hover:text-cyan-300 transition">آخرین اتصال <span x-text="sortIcon('last_seen')"></span></button>
+						<button @click="sortBy('status')" class="col-span-1 text-center hover:text-cyan-300 transition">وضعیت <span x-text="sortIcon('status')"></span></button>
+						<button @click="sortBy('data_used')" class="col-span-3 text-center hover:text-cyan-300 transition">مصرف <span x-text="sortIcon('data_used')"></span></button>
+						<button @click="sortBy('expiry')" class="col-span-2 text-left hover:text-cyan-300 transition">انقضا <span x-text="sortIcon('expiry')"></span></button>
 					</div>
 					<div class="divide-y divide-white/10">
 						<template x-for="(user, index) in paginatedUsers" :key="user.username">
-							<article x-data="{ expanded:false }" class="transition border-b border-white/5" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.02]'">
+							<article x-data="{ expanded:false }" class="transition border-b border-white/5 hover:bg-white/[.08]" :class="index % 2 === 0 ? 'bg-transparent' : 'bg-white/[.05]'">
 								<button @click="expanded=!expanded" class="w-full grid grid-cols-12 gap-3 items-center px-6 py-4 text-right">
+									
 									<div class="col-span-3 flex items-center gap-3 min-w-0">
 										<span class="text-xl" x-text="isActive(user) ? (onlineMap[user.username] ? '🟢' : '⚪') : '🔴'"></span>
 										<div class="min-w-0">
-											<p class="font-black truncate" x-text="user.username"></p>
-											<p class="text-xs text-slate-500 mt-1 truncate" x-show="user.comment">💬 یادداشت دارد</p>
+											<p class="font-black text-sm truncate text-slate-100" x-text="user.username"></p>
+											<p class="text-[10px] text-slate-400 mt-1 truncate" x-show="user.comment">💬 یادداشت دارد</p>
 										</div>
 									</div>
+									
 									<div class="col-span-3 flex justify-center">
 										<template x-if="user.last_seen > 0">
-											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition hover:bg-indigo-500/20 whitespace-nowrap shrink-0" dir="ltr">
+											<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
 												<svg class="w-4 h-4 text-indigo-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
 												<span class="text-[13px] font-black text-slate-100 tracking-widest" x-text="splitDateFa(user.last_seen).date.split('/').join(' / ')"></span>
 												<span class="text-indigo-400/50 font-black">|</span>
@@ -1048,17 +1051,29 @@ func renderDesktopDashboard(currentTab, toastMsg string, toastIsError bool, char
 											<span class="text-[11px] font-bold text-slate-500 bg-slate-800/40 px-4 py-2 rounded-lg whitespace-nowrap shrink-0">بدون اتصال</span>
 										</template>
 									</div>
-									<div class="col-span-2 text-center">
-										<span class="rounded-xl px-3 py-1 text-xs font-black" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300' : 'bg-rose-500/10 text-rose-300'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
+									
+									<div class="col-span-1 flex justify-center">
+										<span class="rounded-xl px-3 py-1.5 text-xs font-black shrink-0" :class="isActive(user) ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]'" x-text="isActive(user) ? 'فعال' : 'منقضی'"></span>
 									</div>
-									<div class="col-span-2 text-left">
-										<p class="font-mono font-black" x-text="formatBytes(user.data_used || 0)"></p>
-										<p class="font-mono text-xs text-slate-500" x-text="limitText(user)"></p>
+									
+									<div class="col-span-3 flex justify-center">
+										<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-[0_0_15px_rgba(6,182,212,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+											<svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+											<span class="text-[13px] font-mono font-black text-slate-100 tracking-widest" x-text="formatBytes(user.data_used || 0)"></span>
+											<span class="text-cyan-400/50 font-black">|</span>
+											<span class="text-[13px] font-mono font-bold text-cyan-200 tracking-widest" x-text="limitText(user)"></span>
+										</div>
 									</div>
-									<div class="col-span-2 text-left">
-										<p class="font-black" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'"></p>
-										<p class="text-xs text-slate-500" x-text="dateFa(user.expiry_unix, false)"></p>
+									
+									<div class="col-span-2 flex justify-end">
+										<div class="inline-flex items-center justify-center gap-3 px-4 py-2 rounded-xl border border-rose-500/40 bg-rose-500/10 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition whitespace-nowrap shrink-0" dir="ltr">
+											<svg class="w-4 h-4 text-rose-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+											<span class="text-[13px] font-black text-slate-100" x-text="daysLeft(user) > 0 ? daysLeft(user) + ' روز' : 'منقضی'" dir="rtl"></span>
+											<span class="text-rose-400/50 font-black">|</span>
+											<span class="text-[13px] font-mono font-bold text-rose-200 tracking-widest" x-text="dateFa(user.expiry_unix, false).split('/').join(' / ')"></span>
+										</div>
 									</div>
+									
 								</button>
 								<div x-show="expanded" x-collapse class="px-6 pb-6">
 									<div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-4">

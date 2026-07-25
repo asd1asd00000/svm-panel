@@ -1869,3 +1869,108 @@ func panelDataScript() string {
 </script>
 `
 }
+func dashboardModalsHTML() string {
+	return `
+	<div x-show="editUserModal" x-cloak class="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" x-transition.opacity @click.self="editUserModal=false" @keydown.escape.window="editUserModal=false">
+		<div class="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-t-[2rem] sm:rounded-[2rem] bg-slate-900 border border-white/10 shadow-2xl p-5 sm:p-7">
+			<div class="flex items-center justify-between mb-5">
+				<h3 class="text-xl font-black text-cyan-300" x-text="selectedUser.mode === 'create' ? '➕ کاربر جدید' : (selectedUser.mode === 'node' ? '🖥️ ویرایش نود' : '✏️ ویرایش کاربر')"></h3>
+				<button @click="editUserModal=false" class="w-10 h-10 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-2xl leading-none">×</button>
+			</div>
+			<div x-show="selectedUser.mode === 'create'">
+				<form action="/admin/actions" method="POST" class="space-y-4">
+					<input type="hidden" name="action" value="create_user">
+					<input type="hidden" name="current_tab" value="users">
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">نام کاربری</label>
+						<div class="flex gap-2">
+							<input type="text" x-model="newUsername" name="username" required dir="ltr" class="flex-1 bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none text-left focus:border-cyan-400">
+							<button type="button" @click="newUsername=randomUsername()" class="rounded-2xl bg-cyan-500/10 text-cyan-300 px-4 font-black">🎲</button>
+						</div>
+					</div>
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">رمز عبور</label>
+						<div class="flex gap-2">
+							<input type="text" x-model="newPassword" name="password" required dir="ltr" class="flex-1 bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none text-left focus:border-cyan-400">
+							<button type="button" @click="newPassword=randomPassword()" class="rounded-2xl bg-cyan-500/10 text-cyan-300 px-4 font-black">🎲</button>
+						</div>
+					</div>
+					<div class="grid grid-cols-3 gap-3">
+						<div><label class="block text-xs font-bold text-slate-400 mb-2">اعتبار روز</label><input type="number" name="days" required class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-xs font-bold text-slate-400 mb-2">حجم GB</label><input type="number" step="any" name="volume" required class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-xs font-bold text-slate-400 mb-2">UDPGW</label><input type="number" name="udpgw" value="7301" required class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+					</div>
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">یادداشت</label>
+						<textarea name="comment" rows="3" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></textarea>
+					</div>
+					<button type="submit" class="w-full rounded-2xl bg-gradient-to-l from-cyan-500 to-emerald-500 text-slate-950 py-3.5 font-black">ایجاد کاربر</button>
+				</form>
+			</div>
+			<div x-show="selectedUser.mode === 'full_edit'">
+				<form action="/admin/actions" method="POST" class="space-y-4">
+					<input type="hidden" name="action" value="full_edit_user">
+					<input type="hidden" name="current_tab" value="users">
+					<input type="hidden" name="username" :value="selectedUser.username">
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">نام کاربری</label>
+						<input type="text" :value="selectedUser.username" disabled dir="ltr" class="w-full bg-slate-950/40 border border-slate-800 rounded-2xl px-4 py-3 text-slate-500 font-bold text-left">
+					</div>
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">رمز عبور</label>
+						<div class="flex gap-2">
+							<input type="text" x-model="newPassword" name="password" required dir="ltr" class="flex-1 bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none text-left focus:border-indigo-400">
+							<button type="button" @click="newPassword=randomPassword()" class="rounded-2xl bg-indigo-500/10 text-indigo-300 px-4 font-black">🎲</button>
+						</div>
+					</div>
+					<div class="grid grid-cols-3 gap-3">
+						<div><label class="block text-xs font-bold text-slate-400 mb-2">اعتبار از الان</label><input type="number" name="days" x-model="editDays" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-xs font-bold text-slate-400 mb-2">حجم کل GB</label><input type="number" step="any" name="volume" x-model="editVol" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+						<div><label class="block text-xs font-bold text-slate-400 mb-2">UDPGW</label><input type="number" name="udpgw" x-model="editUdpgw" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></div>
+					</div>
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">یادداشت</label>
+						<textarea name="comment" x-model="editComment" rows="3" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none"></textarea>
+					</div>
+					<button type="submit" class="w-full rounded-2xl bg-indigo-500 text-white py-3.5 font-black">ذخیره ویرایش</button>
+				</form>
+			</div>
+			<div x-show="selectedUser.mode === 'node'">
+				<form action="/admin/actions" method="POST" class="space-y-4">
+					<input type="hidden" name="action" value="edit_node">
+					<input type="hidden" name="current_tab" value="nodes">
+					<input type="hidden" name="ip" :value="selectedUser.IP">
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">آی‌پی</label>
+						<input type="text" :value="selectedUser.IP" disabled dir="ltr" class="w-full bg-slate-950/40 border border-slate-800 rounded-2xl px-4 py-3 text-slate-500 font-mono text-left">
+					</div>
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">دامنه اتصال</label>
+						<input type="text" name="domain" x-model="selectedUser.Domain" placeholder="node.example.com" dir="ltr" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none text-left font-mono">
+					</div>
+					<div>
+						<label class="block text-xs font-bold text-slate-400 mb-2">نام نمایشی</label>
+						<input type="text" name="remark" x-model="selectedUser.CustomRemark" placeholder="🇩🇪 Germany" class="w-full bg-slate-950/70 border border-slate-700 rounded-2xl px-4 py-3 outline-none">
+					</div>
+					<button type="submit" class="w-full rounded-2xl bg-emerald-500 text-slate-950 py-3.5 font-black">ثبت تغییرات نود</button>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- مودال پاپ‌آپ برای نمایش نمودار (اضافه شده) -->
+	<div x-show="drilldownModal" x-cloak class="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6" x-transition.opacity @click.self="drilldownModal=false; drilldownUrl=''" @keydown.escape.window="drilldownModal=false; drilldownUrl=''">
+		<div class="w-full max-w-5xl h-[85vh] bg-[#020617] border border-slate-700 rounded-[2rem] shadow-2xl flex flex-col overflow-hidden">
+			<div class="flex items-center justify-between px-5 py-4 border-b border-slate-800 shrink-0 bg-slate-900/80">
+				<h3 class="text-lg font-black text-cyan-300">📊 جزئیات مصرف و نمودار</h3>
+				<button @click="drilldownModal=false; drilldownUrl=''" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-500 text-slate-300 hover:text-white flex items-center justify-center text-xl transition leading-none">×</button>
+			</div>
+			<div class="flex-1 min-h-0 relative">
+				<template x-if="drilldownModal">
+					<iframe :src="drilldownUrl" class="w-full h-full border-none"></iframe>
+				</template>
+			</div>
+		</div>
+	</div>
+`
+}

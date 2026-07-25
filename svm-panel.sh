@@ -80,6 +80,9 @@ EOF
         systemctl start mariadb
         systemctl enable mariadb
 
+        # حل مشکل دسترسی روت دیتابیس در اوبونتوهای جدید برای جلوگیری از خطای اتصال
+        mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY ''; FLUSH PRIVILEGES;"
+
         mysql -u root -e "CREATE DATABASE IF NOT EXISTS svm_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
         mysql -u root -e "CREATE TABLE IF NOT EXISTS svm_db.settings (key_name VARCHAR(50) PRIMARY KEY, key_value TEXT);"
 

@@ -1,3 +1,7 @@
+bash <(curl -Ls https://raw.githubusercontent.com/asd1asd00000/svm-panel/main/svm-panel.sh)
+دستور نصب ---------------------------------------------->>>>>>>
+
+
 # SVM Distributed Panel
 
 پنل مدیریت کاربران VPN مبتنی بر تونل SSH با معماری توزیع‌شده (Main + Node).
